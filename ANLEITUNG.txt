@@ -1,0 +1,3 @@
+Anatomie Motion 3D v2.7.1
+Fehlerkorrektur: JavaScript-Zeichenkette der GLB-Daten.
+Öffne rig-labor.html. Internet für Three.js erforderlich.
