@@ -24,6 +24,8 @@ jobs:
         uses: actions/configure-pages@v5
       - name: Build v2.8 independent elbow calibration
         run: python3 scripts/elbow-calibration-v28.py
+      - name: Build v2.9 automatic elbow calibration
+        run: python3 scripts/auto-elbows-v29.py
       - name: Upload website
         uses: actions/upload-pages-artifact@v3
         with:
