@@ -53,7 +53,7 @@ function applyForearmFingers(){
  for(const j of FOREARM_FINGER_RIG.forearms){
   const angle=(j.side==='l'?left:right)*Math.PI/180;
   // Compose with elbow flexion rather than overwriting it.
-  j.bone.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(j.axis,angle));
+  j.bone.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(j.axis,angle));
  }
  for(const j of FOREARM_FINGER_RIG.fingers){
   j.bone.quaternion.copy(new THREE.Quaternion().setFromAxisAngle(j.axis,curl*Math.PI/180)).multiply(j.base);
