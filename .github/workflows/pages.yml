@@ -30,12 +30,15 @@ jobs:
         run: python3 scripts/extra-joints-v30.py
       - name: Build v3.1 measured knee angles
         run: python3 scripts/knee-measure-v31.py
+      - name: Build v4.0 anatomical motion rules
+        run: python3 scripts/anatomy-rules-v40.py
       - name: Verify published pages
         run: |
           test -s index.html
           test -s rig-labor-v2.9.html
           test -s rig-labor-v3.0.html
           test -s rig-labor-v3.1.html
+          test -s rig-labor-v4.0.html
           ls -lh index.html rig-labor-v2.9.html rig-labor-v3.0.html
       - name: Upload website
         uses: actions/upload-pages-artifact@v3
