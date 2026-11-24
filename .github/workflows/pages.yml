@@ -22,6 +22,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Configure Pages
         uses: actions/configure-pages@v5
+      - name: Correct right elbow rotation for deployment
+        run: python3 scripts/fix-right-elbow.py
       - name: Upload website
         uses: actions/upload-pages-artifact@v3
         with:
