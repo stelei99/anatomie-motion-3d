@@ -36,6 +36,8 @@ jobs:
         run: python3 scripts/joint-atlas-v41.py
       - name: Build v4.2 joint candidate mapping
         run: python3 scripts/joint-map-v42.py
+      - name: Build v4.3 additional joint controls
+        run: python3 scripts/extra-controls-v43.py
       - name: Verify published pages
         run: |
           test -s index.html
@@ -45,6 +47,7 @@ jobs:
           test -s rig-labor-v4.0.html
           test -s rig-labor-v4.1.html
           test -s rig-labor-v4.2.html
+          test -s rig-labor-v4.3.html
           ls -lh index.html rig-labor-v2.9.html rig-labor-v3.0.html
       - name: Upload website
         uses: actions/upload-pages-artifact@v3
