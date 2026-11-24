@@ -1,0 +1,12 @@
+# Lokale Dateien und temporäre Exporte
+.DS_Store
+Thumbs.db
+*.log
+node_modules/
+dist/
+.cache/
+*.tmp
+
+# Große Quelldateien und Arbeitsstände nicht versehentlich committen
+*.blend1
+*.blend2
