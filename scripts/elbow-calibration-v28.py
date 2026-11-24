@@ -17,5 +17,7 @@ replacement = """function apply(){if(!model)return;const a=Math.max(0,Math.min(1
 s = s[:a]+replacement+s[b:]
 s = s.replace("$('axis').onchange=apply;", "for(const id of ['axis_l','axis_r','sign_l','sign_r','offset_l','offset_r']){$(id).addEventListener('input',apply);$(id).addEventListener('change',apply)}", 1)
 s = s.replace('Anatomie Motion 3D · v2.7.1', 'Anatomie Motion 3D · v2.8 – Gelenkkalibrierung', 1)
+assert "Anatomie Motion 3D · v2.8 – Gelenkkalibrierung" in s, "Version label was not updated"
 p.write_text(s, encoding="utf-8")
+Path("rig-labor-v2.8.html").write_text(s, encoding="utf-8")
 print("Independent left/right elbow calibration controls installed.")
