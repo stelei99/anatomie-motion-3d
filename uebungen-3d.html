@@ -129,7 +129,9 @@ function poseGripFingers(){
   // Do not make a fist in mid-air: curl only when the palm/finger base reaches the shaft.
   const handOffset=wrist.clone().sub(center),handRadial=handOffset.addScaledVector(axis,-handOffset.dot(axis)).length();
   const baseClearance=radial.length()-shaftRadius;
-  if(baseClearance>.055||handRadial>.095){blocked++;continue;}
+  // Finger-base contact is mandatory. A nearby wrist alone does not constitute a grasp.
+  // 2 cm tolerance is intentionally conservative until palm surface mesh is calibrated.
+  if(baseClearance>.02||handRadial>.055){blocked++;continue;}
   const joints=chain.joints;
   const length=wp(joints[2]).distanceTo(wp(joints[1]))||.02;
   function tip(){
@@ -161,7 +163,7 @@ function poseGripFingers(){
   }
   const err=surfaceError();processed++;if(err<.035)close++;
  }
- fingerGripStatus=processed?close+'/'+processed+' Fingerspitzen nahe Stange; '+blocked+' Finger ohne Handkontakt nicht gebeugt (Näherung)':'Kein Handflächenkontakt – Finger bleiben geöffnet';
+ fingerGripStatus=processed?close+'/'+processed+' Fingerspitzen nahe Stange; '+blocked+' Finger ohne Basis-Kontakt nicht gebeugt (Näherung)':'Kein bestätigter Fingerbasis-Kontakt – kein Griff';
 }
 function barContact(){
  if(!barbell?.visible||!arms.length||!model)return;
@@ -190,7 +192,7 @@ function barContact(){
  const penetration=barBack-backSurface;
  const inside=penetration>.025;
  const el=$('contactStatus');
- if(el)el.textContent='Hand links: '+hands[0].kind+' ('+hands[0].clearance.toFixed(3)+') · Hand rechts: '+(hands[1]?.kind||'–')+' ('+(hands[1]?.clearance.toFixed(3)||'–')+') · Oberkörper: '+(inside?'mögliche Durchdringung':'keine Durchdringung in vereinfachter Prüfung')+' · '+fingerGripStatus+' · Näherungsprüfung, keine exakte Hautkollision';
+ if(el)el.textContent='Achtung: Nähe ist kein sicherer Griff. Hand links: '+hands[0].kind+' ('+hands[0].clearance.toFixed(3)+') · Hand rechts: '+(hands[1]?.kind||'–')+' ('+(hands[1]?.clearance.toFixed(3)||'–')+') · Oberkörper: '+(inside?'mögliche Durchdringung':'keine Durchdringung in vereinfachter Prüfung')+' · '+fingerGripStatus+' · Näherungsprüfung, keine exakte Hautkollision';
  return {hands,inside,penetration};
 }
 function combinedCom(bodyCenter){if(!barbell||!barbell.visible)return bodyCenter;barbell.updateWorldMatrix(true,false);const barCenter=barbell.getWorldPosition(V());const bodyMass=75,barMass=Number($('loadKg').value);return bodyCenter.clone().multiplyScalar(bodyMass).addScaledVector(barCenter,barMass).divideScalar(bodyMass+barMass)}
