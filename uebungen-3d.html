@@ -173,6 +173,38 @@ function setupFingers(){
   fingerChains.push({side,name,joints,neutral:joints.map(j=>j.quaternion.clone())});
  }
 }
+// Calibrate wrist orientation against the actual finger roots, without assuming rig axes.
+// Restrict search to modest local rotations to avoid inverted palms.
+function alignHandsToGrips(){
+ if(!barbell?.visible)return;
+ model.updateMatrixWorld(true);
+ const shaftCenter=wp(barbell),shaftAxis=barbell.userData.axisLocal.clone().transformDirection(barbell.matrixWorld).normalize();
+ for(const arm of arms){
+  const hand=arm.hand,shoulder=wp(arm.upper),side=Math.sign(shoulder.clone().sub(shaftCenter).dot(shaftAxis))||1;
+  const grip=equipmentGrip(side);if(!grip)continue;
+  const roots=fingerChains.filter(c=>c.side=== (hand.name.endsWith('_l')?'l':'r')&&c.name!=='thumb').map(c=>c.joints[0]);
+  if(!roots.length)continue;
+  const wrist=wp(hand),base=hand.quaternion.clone();
+  const rootMid=()=>{model.updateMatrixWorld(true);return roots.reduce((sum,j)=>sum.add(wp(j)),new THREE.Vector3()).multiplyScalar(1/roots.length)};
+  const score=()=>{
+   const palm=rootMid(),offset=palm.clone().sub(grip.center);
+   const radial=offset.addScaledVector(grip.axis,-offset.dot(grip.axis)).length();
+   const palmForward=palm.clone().sub(wrist).normalize();
+   const radialTarget=grip.center.clone().sub(wrist).normalize();
+   return Math.abs(radial-grip.radius-.012)*4+Math.max(0,palmForward.dot(radialTarget)*-1)*.1;
+  };
+  let best=score(),bestQ=base.clone();
+  for(const axis of [new THREE.Vector3(1,0,0),new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,1)]){
+   for(const angle of [-.42,-.2,.2,.42]){
+    hand.quaternion.copy(base).multiply(new THREE.Quaternion().setFromAxisAngle(axis,angle));
+    const candidate=score()+Math.abs(angle)*.015;
+    if(candidate<best){best=candidate;bestQ=hand.quaternion.clone()}
+   }
+  }
+  hand.quaternion.copy(bestQ);
+ }
+ model.updateMatrixWorld(true);
+}
 function poseGripFingers(){
  for(const chain of fingerChains)chain.joints.forEach((j,i)=>j.quaternion.copy(chain.neutral[i]));
  if(!barbell?.visible){fingerGripStatus='Finger entspannt';return}
@@ -312,6 +344,7 @@ function pose(d){
  const margin=halfLength-Math.abs(best.offset);
  marker.position.copy(best.center);
  plumb.geometry.setFromPoints([best.center,new THREE.Vector3(best.center.x,0,best.center.z)]);
+ alignHandsToGrips();
  poseGripFingers();
  $('pct').textContent=Math.round(d*100)+' %';updateMuscleBars(best);
  if(barbell?.visible)barContact();else if($('contactStatus'))$('contactStatus').textContent='Langhantel ausgeschaltet';
