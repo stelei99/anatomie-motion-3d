@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#07345b"><title>Anatomie Motion 3D – Trainingsatlas</title>
 <style>*{box-sizing:border-box}body{margin:0;background:#061e31;color:#eaf7fd;font:15px system-ui,Arial}header{padding:14px 16px;background:#07345b;border-bottom:3px solid #08a9ef}h1{font-size:21px;margin:0 0 5px}small{color:#c4dce9}main{max-width:1350px;margin:auto;padding:12px}.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}button,a.action{background:#164b6a;color:white;border:1px solid #4b7991;border-radius:9px;padding:11px 13px;font:inherit;cursor:pointer;text-decoration:none}button[aria-selected=true]{background:#08a9ef;color:#061e31;font-weight:700}.frame{width:100%;height:calc(100dvh - 185px);min-height:520px;border:1px solid #35617b;border-radius:12px;background:#102a3b}#notice{background:#0c3048;border-radius:9px;padding:10px;margin:8px 0;line-height:1.5}#loading{color:#ffcb05}footer{padding:12px;color:#c4dce9;font-size:13px}a{color:#8bdcff}@media(max-width:650px){.frame{height:calc(100dvh - 230px);min-height:430px}.tabs button{flex:1 1 42%}}</style></head><body>
-<header><h1>Anatomie Motion 3D</h1><small>Trainingsatlas · Muskeln · Bewegungs-Rig · Skelettansicht</small></header>
-<main><nav class="tabs" aria-label="Arbeitsbereiche">
-<button data-page="muskelatlas.html" aria-selected="false">Muskeln & Übungen</button>
-<button data-page="kniebeuge-rig.html" aria-selected="true">Natürliche Kniebeuge</button>
-<button data-page="bewegungslabor.html" aria-selected="false">Anatomische Ebenen</button>
-<button data-page="rig-labor.html" aria-selected="false">Original-Rig</button>
+<header><h1>Anatomie Motion 3D</h1><small>Interaktiver Trainingsatlas · Übungsanalyse · Muskeln · Knochen · Gelenke</small></header>
+<main><section style="padding:12px;background:#0c3048;border:1px solid #35617b;border-radius:12px;margin:4px 0 12px"><strong>Übungen und Anatomie erforschen</strong><p style="margin:7px 0;color:#c4dce9">Wähle ein Modul, drehe das 3D-Modell und steuere die Bewegung. Die Kniebeuge nutzt das bewegliche Original-Rig; weitere Übungen und anatomische Ebenen befinden sich noch in Entwicklung.</p></section><nav class="tabs" aria-label="Arbeitsbereiche">
+<button data-page="muskelatlas.html" aria-selected="false">Muskelbeteiligung</button>
+<button data-page="kniebeuge-rig.html" aria-selected="true">Kniebeuge 3D</button>
+<button data-page="bewegungslabor.html" aria-selected="false">Muskeln / Skelett</button>
+<button data-page="rig-labor.html" aria-selected="false">Gelenk-Labor</button>
 </nav>
 <div id="notice"><strong id="heading">Natürliche Kniebeuge</strong> · <span id="description">Originales skiniertes Körpermodell mit koordinierter Kniebeuge.</span> <span id="loading" role="status">Lade Modul …</span></div>
 <iframe class="frame" id="module" title="Anatomie-3D-Modul" src="kniebeuge-rig.html" loading="eager" referrerpolicy="strict-origin-when-cross-origin"></iframe>
