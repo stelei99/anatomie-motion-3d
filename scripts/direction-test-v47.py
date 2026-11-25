@@ -1,10 +1,10 @@
 from pathlib import Path
 s=Path("rig-labor-v4.6.html").read_text(encoding="utf-8")
 assert "calibrateKneeAxes()" in s
-s=s.replace("v4.6 – Winkelmessung und Achsenkorrektur (Beta)","v4.7 – Bewegungsrichtung prüfen (Beta)")
+s=s.replace("v4.6 – Winkelmessung und Achsenkorrektur (Beta)","v4.7 – Winkelreaktion prüfen (Beta)")
 needle='<p id="kneeCalibrationStatus"'
 assert s.count(needle)==1
-panel='''<div style="padding:9px;margin:8px 0;border:1px solid #46748d;border-radius:8px"><strong>Bewegungsrichtung automatisch testen</strong><p style="font-size:12px">Testet Knie links/rechts bei 0° und 15° am Rig. Bei umgekehrter Winkeländerung wird das Vorzeichen der jeweiligen Knieachse korrigiert. Hüft-, Schulter- und Ellenbogenachsen werden zusätzlich auf numerische Plausibilität geprüft. Die Ausgangsstellung wird danach wiederhergestellt.</p><button type="button" id="directionTestButton">Bewegungsrichtungen prüfen</button><p id="directionTestStatus" role="status" style="font-size:12px;white-space:pre-line">Noch nicht geprüft.</p></div>'''
+panel='''<div style="padding:9px;margin:8px 0;border:1px solid #46748d;border-radius:8px"><strong>Bewegungsrichtung automatisch testen</strong><p style="font-size:12px">Testet Knie links/rechts bei 0° und 15° am Rig. Prüft die gemessene Winkeländerung; die anatomische Beugerichtung lässt sich aus einem ungerichteten Winkel allein nicht sicher bestimmen. Hüft-, Schulter- und Ellenbogenachsen werden zusätzlich auf numerische Plausibilität geprüft. Die Ausgangsstellung wird danach wiederhergestellt.</p><button type="button" id="directionTestButton">Winkelreaktion prüfen</button><p id="directionTestStatus" role="status" style="font-size:12px;white-space:pre-line">Noch nicht geprüft.</p></div>'''
 s=s.replace(needle,panel+needle,1)
 js="""function readKneeAngle(side){
  const hip=bones['thigh_'+side],knee=bones['calf_'+side],ankle=bones['foot_'+side];
@@ -34,8 +34,7 @@ function testMotionDirections(){
    }
    const change=measured-neutral;
    if(change< -2){
-    joint.axis.negate();
-    messages.push('Knie '+side+': Achsenrichtung umgekehrt (vorher '+change.toFixed(1)+'°)');
+    messages.push('Knie '+side+': Winkel nimmt ab ('+change.toFixed(1)+'°) – manuelle anatomische Prüfung nötig');
    }else if(change<2){
     messages.push('Knie '+side+': kaum Winkeländerung ('+change.toFixed(1)+'°), keine automatische Korrektur');
    }else messages.push('Knie '+side+': Winkel steigt um '+change.toFixed(1)+'° bei 15° Soll');
