@@ -2,30 +2,25 @@
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#07345b"><title>Anatomie Motion 3D – Trainingsatlas</title>
 <style>*{box-sizing:border-box}body{margin:0;background:#061e31;color:#eaf7fd;font:15px system-ui,Arial}header{padding:14px 16px;background:#07345b;border-bottom:3px solid #08a9ef}h1{font-size:21px;margin:0 0 5px}small{color:#c4dce9}main{max-width:1350px;margin:auto;padding:12px}.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}button,a.action{background:#164b6a;color:white;border:1px solid #4b7991;border-radius:9px;padding:11px 13px;font:inherit;cursor:pointer;text-decoration:none}button[aria-selected=true]{background:#08a9ef;color:#061e31;font-weight:700}.frame{width:100%;height:calc(100dvh - 185px);min-height:520px;border:1px solid #35617b;border-radius:12px;background:#102a3b}#notice{background:#0c3048;border-radius:9px;padding:10px;margin:8px 0;line-height:1.5}#loading{color:#ffcb05}footer{padding:12px;color:#c4dce9;font-size:13px}a{color:#8bdcff}@media(max-width:650px){.frame{height:calc(100dvh - 230px);min-height:430px}.tabs button{flex:1 1 42%}}</style></head><body>
 <header><h1>Anatomie Motion 3D</h1><small>Interaktiver Trainingsatlas · Übungsanalyse · Muskeln · Knochen · Gelenke</small></header>
-<main><section style="padding:12px;background:#0c3048;border:1px solid #35617b;border-radius:12px;margin:4px 0 12px"><strong>Übungen und Anatomie erforschen</strong><p style="margin:7px 0;color:#c4dce9">Wähle ein Modul, drehe das 3D-Modell und steuere die Bewegung. Die Kniebeuge nutzt das bewegliche Original-Rig; weitere Übungen und anatomische Ebenen befinden sich noch in Entwicklung.</p></section><nav class="tabs" aria-label="Arbeitsbereiche">
+<main><section style="padding:12px;background:#0c3048;border:1px solid #35617b;border-radius:12px;margin:4px 0 12px"><strong>Übungen und Anatomie erforschen</strong><p style="margin:7px 0;color:#c4dce9">Wähle einen Bereich, drehe das 3D-Modell und steuere die Bewegung. Die Kniebeuge nutzt das bewegliche Original-Rig; weitere Übungen und anatomische Ebenen befinden sich noch in Entwicklung.</p></section><nav class="tabs" aria-label="Arbeitsbereiche">
 <button data-page="uebungen-3d.html" aria-selected="true">Übungsstudio 3D</button>
 <button data-page="muskelatlas.html" aria-selected="false">Muskelbeteiligung</button>
-<button data-page="kniebeuge-rig.html" aria-selected="false">Kniebeuge 3D</button>
 <button data-page="bewegungslabor.html" aria-selected="false">Muskeln / Skelett</button>
-<button data-page="rig-labor.html" aria-selected="false">Gelenk-Labor</button>
 </nav>
 <div id="notice"><strong id="heading">Übungsstudio 3D</strong> · <span id="description">Mehrere Übungen am beweglichen Original-Rig; Hüftbeugen als vereinfachte Vorschau.</span> <span id="loading" role="status">Lade Modul …</span></div>
 <iframe class="frame" id="module" title="Anatomie-3D-Modul" src="uebungen-3d.html" loading="eager" referrerpolicy="strict-origin-when-cross-origin"></iframe>
-<p><strong>Empfohlener Einstieg:</strong> „Übungsstudio 3D“ verwendet das vorhandene bewegliche Ganzkörper-Rig. Im „Muskelatlas“ kannst du weitere Übungsprofile untersuchen; diese sind noch nicht gleichwertig animiert.</p><div class="tabs"><button id="reload">↻ Modul neu laden</button><a id="direct" class="action" href="uebungen-3d.html" target="_blank" rel="noopener">In eigenem Fenster öffnen</a></div>
+
 <footer>Die Module verwenden unterschiedliche anatomische Modelle. Eine gemeinsame, validierte Muskel-Skelett-Kinematik ist noch nicht implementiert. Bei Verbindungsproblemen können externe 3D-Assets oder Bibliotheken fehlen.</footer></main>
 <script>
 (()=>{'use strict';
-const frame=document.getElementById('module'),buttons=[...document.querySelectorAll('[data-page]')],heading=document.getElementById('heading'),description=document.getElementById('description'),loading=document.getElementById('loading'),direct=document.getElementById('direct');
+const frame=document.getElementById('module'),buttons=[...document.querySelectorAll('[data-page]')],heading=document.getElementById('heading'),description=document.getElementById('description'),loading=document.getElementById('loading');
 const pages={
 'uebungen-3d.html':['Übungsstudio 3D','Mehrere Übungen mit dem beweglichen Original-Rig. Hüftbeugen sind noch vereinfachte Vorschauen.'],
 'muskelatlas.html':['Muskeln & Übungen','Einzelne Muskelmeshes, Übungsprofile und Beteiligungsfarben. Bewegungen geometrisch angenähert.'],
-'kniebeuge-rig.html':['Natürliche Kniebeuge','Originales skiniertes Körpermodell mit koordinierter Kniebeuge und Schwerpunktannäherung.'],
-'bewegungslabor.html':['Anatomische Ebenen','Getrennte Ansichten von Haut, Muskeln und Skelett im Bewegungslabor.'],
-'rig-labor.html':['Original-Rig','Technisches Rig-Labor mit Originalmodell; größere Datei und längere Ladezeit möglich.']};
-function choose(page,writeHash=true){if(!Object.prototype.hasOwnProperty.call(pages,page))page='uebungen-3d.html';buttons.forEach(b=>b.setAttribute('aria-selected',String(b.dataset.page===page)));heading.textContent=pages[page][0];description.textContent=pages[page][1];direct.href=page;loading.textContent='Lade Modul …';if(frame.getAttribute('src')!==page)frame.setAttribute('src',page);if(writeHash)history.replaceState(null,'','#'+encodeURIComponent(page));}
+'bewegungslabor.html':['Anatomische Ebenen','Getrennte Ansichten von Haut, Muskeln und Skelett im Bewegungslabor.']};
+function choose(page,writeHash=true){if(!Object.prototype.hasOwnProperty.call(pages,page))page='uebungen-3d.html';buttons.forEach(b=>b.setAttribute('aria-selected',String(b.dataset.page===page)));heading.textContent=pages[page][0];description.textContent=pages[page][1];loading.textContent='Lade Modul …';if(frame.getAttribute('src')!==page)frame.setAttribute('src',page);if(writeHash)history.replaceState(null,'','#'+encodeURIComponent(page));}
 buttons.forEach(b=>b.addEventListener('click',()=>choose(b.dataset.page)));
 frame.addEventListener('load',()=>{loading.textContent='Modul geöffnet. Die 3D-Daten können noch laden.'});
-document.getElementById('reload').addEventListener('click',()=>{loading.textContent='Lade erneut …';frame.src=frame.getAttribute('src')});
 window.addEventListener('hashchange',()=>choose(decodeURIComponent(location.hash.slice(1)),false));
 choose(decodeURIComponent(location.hash.slice(1)),false);
 })();
