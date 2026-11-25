@@ -122,11 +122,14 @@ function poseGripFingers(){
  if(!barbell?.visible){fingerGripStatus='Finger entspannt';return}
  model.updateMatrixWorld(true);
  const center=wp(barbell),axis=barbell.userData.axisLocal.clone().transformDirection(barbell.matrixWorld).normalize();
- const shaftRadius=.018;let close=0,processed=0;
+ const shaftRadius=.018;let close=0,processed=0,blocked=0;
  for(const chain of fingerChains){
   const wrist=wp(bones['hand_'+chain.side]),root=wp(chain.joints[0]);
   const radial=root.clone().sub(center).addScaledVector(axis,-root.clone().sub(center).dot(axis));
-  if(radial.length()>.17)continue;
+  // Do not make a fist in mid-air: curl only when the palm/finger base reaches the shaft.
+  const handOffset=wrist.clone().sub(center),handRadial=handOffset.addScaledVector(axis,-handOffset.dot(axis)).length();
+  const baseClearance=radial.length()-shaftRadius;
+  if(baseClearance>.055||handRadial>.095){blocked++;continue;}
   const joints=chain.joints;
   const length=wp(joints[2]).distanceTo(wp(joints[1]))||.02;
   function tip(){
@@ -158,7 +161,7 @@ function poseGripFingers(){
   }
   const err=surfaceError();processed++;if(err<.035)close++;
  }
- fingerGripStatus=processed?close+'/'+processed+' Fingerspitzen nahe Stange (geometrische Näherung)':'Finger außer Reichweite';
+ fingerGripStatus=processed?close+'/'+processed+' Fingerspitzen nahe Stange; '+blocked+' Finger ohne Handkontakt nicht gebeugt (Näherung)':'Kein Handflächenkontakt – Finger bleiben geöffnet';
 }
 function barContact(){
  if(!barbell?.visible||!arms.length||!model)return;
