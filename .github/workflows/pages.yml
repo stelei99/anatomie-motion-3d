@@ -42,6 +42,8 @@ jobs:
         run: python3 scripts/forearm-fingers-v44.py
       - name: Build v4.5 axis audit
         run: python3 scripts/axis-audit-v45.py
+      - name: Build v4.6 knee axis calibration
+        run: python3 scripts/knee-calibration-v46.py
       - name: Verify published pages
         run: |
           test -s index.html
@@ -54,6 +56,7 @@ jobs:
           test -s rig-labor-v4.3.html
           test -s rig-labor-v4.4.html
           test -s rig-labor-v4.5.html
+          test -s rig-labor-v4.6.html
           ls -lh index.html rig-labor-v2.9.html rig-labor-v3.0.html
       - name: Upload website
         uses: actions/upload-pages-artifact@v3
