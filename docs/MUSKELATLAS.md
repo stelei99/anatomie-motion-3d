@@ -66,6 +66,7 @@ Hinweis: „Hauptbeteiligung“ ist eine didaktische, qualitative Kategorie, kei
 ## Implementierungsstand 25.11.2026
 - `muskelatlas.html` angelegt: 3D-Ganzkörper-Atlas mit getrennt auswählbaren Muskelmeshes, Suche, Regionenauswahl und didaktischer Kniebeugen-Farbgebung.
 - Quelle: `organui/muscles-3d`, `public/models/muscles.glb` (BodyParts3D, CC BY-SA 2.1 Japan); derzeit per jsDelivr geladen, nicht als eigene Assetkopie abgelegt.
+- **v3.1 (experimentell):** `muskelatlas.html` hat nun einen Kniebeugen-Regler, Play/Pause, Aufrichten und umkehrbare Beugerichtung. Die einzelnen anatomischen Meshes werden im GPU-Vertexshader durch ein vereinfachtes, gemeinsames Hüft-/Knie-/Sprunggelenkmodell verformt. **Das ist eine optische Demonstration, noch keine anatomisch korrekte individuelle Muskelskinning-Lösung.** Insbesondere ist das Modell nicht an das 53-Knochen-Rig gekoppelt; Gelenkachsen und Knieposition sind nur aus dem Modell-Bounding-Box angenähert. Deformationen, Durchdringungen, Muskelursprünge/-ansätze und mobile Performance müssen visuell geprüft werden.
 - **Noch offen:** Browser-Funktionstest und zuverlässiger CDN-Abruf, Anatomie-Qualitätsprüfung, deutsch-lateinische Muskelnamen, Rig-Registrierung, Skinning, Bewegungsphasen, vollständige Schichten Haut/Skelett und Fersenkontakt.
 - Die Auswahl umfasst Muskeln und Sehnen; diese müssen bei späterer fachlicher Katalogisierung getrennt werden.
 
