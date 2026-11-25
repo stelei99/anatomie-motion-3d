@@ -1,6 +1,6 @@
 # Anatomie Motion 3D – Anatomischer Muskelatlas (Variante A)
 
-Stand: 2026-11-25 · Status: Architektur und Datenmodell; **noch kein anatomisch korrektes Muskelmesh implementiert**.
+Stand: 2026-11-25 · Status: **Phase 1 als separater statischer Atlas-Prototyp umgesetzt**; noch keine Kopplung der Muskelmeshes an das bewegliche 53-Knochen-Rig.
 
 ## Ziel
 Die bestehende animierte Figur mit 53 Rig-Knochen bleibt als Bewegungsgrundlage. Darüber werden echte, individuell segmentierte 3D-Muskeloberflächen gelegt, die bei der Kniebeuge mit dem Skelett deformiert werden. Das Muskelmodell ist eine **eigene anatomische Ebene**, nicht bloß eine Farbmarkierung auf der Haut.
@@ -62,6 +62,12 @@ Das Zielmodell umfasst alle größeren oberflächlichen und relevanten tiefen Sk
 | Gluteus medius/minimus | Becken- und Hüftstabilisierung | Stabilisierend |
 
 Hinweis: „Hauptbeteiligung“ ist eine didaktische, qualitative Kategorie, keine Muskelaktivitätsmessung. Muskelaktivität variiert mit Technik, Tiefe, Last, Person und Phase.
+
+## Implementierungsstand 25.11.2026
+- `muskelatlas.html` angelegt: 3D-Ganzkörper-Atlas mit getrennt auswählbaren Muskelmeshes, Suche, Regionenauswahl und didaktischer Kniebeugen-Farbgebung.
+- Quelle: `organui/muscles-3d`, `public/models/muscles.glb` (BodyParts3D, CC BY-SA 2.1 Japan); derzeit per jsDelivr geladen, nicht als eigene Assetkopie abgelegt.
+- **Noch offen:** Browser-Funktionstest und zuverlässiger CDN-Abruf, Anatomie-Qualitätsprüfung, deutsch-lateinische Muskelnamen, Rig-Registrierung, Skinning, Bewegungsphasen, vollständige Schichten Haut/Skelett und Fersenkontakt.
+- Die Auswahl umfasst Muskeln und Sehnen; diese müssen bei späterer fachlicher Katalogisierung getrennt werden.
 
 ## Technischer Integrationsplan
 1. **Asset-Auswahl und Lizenzprüfung:** ein anatomisch detailliertes Muskelmodell mit klar benannten separaten Muskeln und erlaubter Nutzung finden/erstellen. GLB/glTF bevorzugt. Keine unklare Lizenz oder Meshes ohne Herkunft.
