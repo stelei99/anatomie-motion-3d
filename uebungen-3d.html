@@ -17,6 +17,27 @@ function com(){let sum=V(),mass=0;function add(p,m){sum.addScaledVector(p,m);mas
 function poseArms(depth){
  for(const arm of arms){arm.upper.quaternion.copy(arm.upperQ);arm.lower.quaternion.copy(arm.lowerQ)}
  model.updateMatrixWorld(true);
+ if(barbell&&barbell.visible&&barbell.userData.axisLocal){
+  // Two-link arm IK: shoulders and elbows follow stable bar-grip targets.
+  barbell.updateWorldMatrix(true,false);
+  const center=wp(barbell),axis=barbell.userData.axisLocal.clone().transformDirection(barbell.matrixWorld).normalize();
+  for(const arm of arms){
+   const shoulder=wp(arm.upper),elbow=wp(arm.lower),hand=wp(arm.hand);
+   const side=Math.sign(shoulder.clone().sub(center).dot(axis))||1;
+   const target=center.clone().addScaledVector(axis,side*barbell.userData.gripOffset);
+   const a=shoulder.distanceTo(elbow),b=elbow.distanceTo(hand),delta=target.clone().sub(shoulder);
+   const dist=Math.max(.0001,Math.min(a+b-.0005,delta.length()));
+   const dir=delta.normalize();
+   const along=(a*a-b*b+dist*dist)/(2*dist),height=Math.sqrt(Math.max(0,a*a-along*along));
+   // Anatomical elbow bend points downward and behind the bar.
+   const preferred=bind.forward.clone().multiplyScalar(-.7).add(new THREE.Vector3(0,-1,0)).normalize();
+   const bend=preferred.addScaledVector(dir,-preferred.dot(dir)).normalize();
+   const elbowTarget=shoulder.clone().addScaledVector(dir,along).addScaledVector(bend,height);
+   aimBone(arm.upper,arm.lower,elbowTarget);
+   aimBone(arm.lower,arm.hand,target);
+  }
+  return;
+ }
  if(!$('arms').checked||depth<=0)return;
  for(const arm of arms){
   const initialHand=wp(arm.hand),neutral=wq(arm.upper);
@@ -28,10 +49,9 @@ function poseArms(depth){
    if(score>best){best=score;chosen=wq(arm.upper)}
   }
   setWorldRotation(arm.upper,chosen);
-  // Preserve the original elbow pose for now: elbow hinge calibration is pending.
  }
 }
-function createBarbell(){if(barbell){barbell.parent?.remove(barbell);barbell=null}const spine=bones.spine_03||bones.spine_02||bones.spine_01;if(!spine||!arms.length)return;model.updateMatrixWorld(true);const left=wp(arms[0].upper),right=wp(arms[1].upper),mid=left.clone().add(right).multiplyScalar(.5),span=left.distanceTo(right),axis=right.clone().sub(left).normalize();const back=bind.forward.clone().multiplyScalar(-Math.max(.035,span*.13));const center=mid.add(back);const root=new THREE.Group();spine.add(root);root.position.copy(spine.worldToLocal(center.clone()));const localAxis=axis.clone().transformDirection(new THREE.Matrix4().extractRotation(spine.matrixWorld).invert()).normalize();const metal=new THREE.MeshStandardMaterial({color:0xaeb9c2,metalness:.72,roughness:.28}),plates=new THREE.MeshStandardMaterial({color:0x202d38,metalness:.3,roughness:.62});const rod=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,Math.max(.95,span*2.9),16),metal);rod.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),localAxis);root.add(rod);for(const sign of [-1,1])for(const off of [.89,1.02]){const disc=new THREE.Mesh(new THREE.CylinderGeometry(.14,.14,.055,24),plates);disc.quaternion.copy(rod.quaternion);disc.position.copy(localAxis).multiplyScalar(sign*span*off);root.add(disc)}barbell=root;barbell.visible=$('barVisible').checked;status.textContent='Langhantel geladen – bei Bedarf über den Schalter ausblenden';barbell.userData.center=new THREE.Vector3(0,0,0)}
+function createBarbell(){if(barbell){barbell.parent?.remove(barbell);barbell=null}const spine=bones.spine_03||bones.spine_02||bones.spine_01;if(!spine||!arms.length)return;model.updateMatrixWorld(true);const left=wp(arms[0].upper),right=wp(arms[1].upper),mid=left.clone().add(right).multiplyScalar(.5),span=left.distanceTo(right),axis=right.clone().sub(left).normalize();const back=bind.forward.clone().multiplyScalar(-Math.max(.035,span*.13));const center=mid.add(back);const root=new THREE.Group();spine.add(root);root.position.copy(spine.worldToLocal(center.clone()));const localAxis=axis.clone().transformDirection(new THREE.Matrix4().extractRotation(spine.matrixWorld).invert()).normalize();const metal=new THREE.MeshStandardMaterial({color:0xaeb9c2,metalness:.72,roughness:.28}),plates=new THREE.MeshStandardMaterial({color:0x202d38,metalness:.3,roughness:.62});const rod=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,Math.max(.95,span*2.9),16),metal);rod.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),localAxis);root.add(rod);for(const sign of [-1,1])for(const off of [.89,1.02]){const disc=new THREE.Mesh(new THREE.CylinderGeometry(.14,.14,.055,24),plates);disc.quaternion.copy(rod.quaternion);disc.position.copy(localAxis).multiplyScalar(sign*span*(off+.20));root.add(disc)}barbell=root;barbell.visible=$('barVisible').checked;status.textContent='Langhantel geladen – bei Bedarf über den Schalter ausblenden';barbell.userData.axisLocal=localAxis.clone();barbell.userData.gripOffset=span*.64;barbell.userData.center=new THREE.Vector3(0,0,0)}
 function combinedCom(bodyCenter){if(!barbell||!barbell.visible)return bodyCenter;barbell.updateWorldMatrix(true,false);const barCenter=barbell.getWorldPosition(V());const bodyMass=75,barMass=Number($('loadKg').value);return bodyCenter.clone().multiplyScalar(bodyMass).addScaledVector(barCenter,barMass).divideScalar(bodyMass+barMass)}
 function pose(d){
  if(!model)return;
