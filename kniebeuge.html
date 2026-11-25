@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Anatomie Motion 3D – Kniebeuge v2.8</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#071b2b;color:#eaf7fd;font:15px system-ui,Arial}header{padding:16px;background:#07345b;border-bottom:3px solid #08a9ef}h1{font-size:21px;margin:0}small,p{color:#b9d2df}main{max-width:1000px;margin:auto;padding:12px}a{color:#8bd8ff}#view{height:min(65vh,600px);min-height:340px;background:#102e42;border-radius:12px;position:relative}#view canvas{display:block;width:100%;height:100%;touch-action:none}section{border:1px solid #32617c;border-radius:12px;padding:13px;margin:12px 0;background:#0c2b41}button,select{background:#174560;border:1px solid #39708b;color:white;border-radius:8px;padding:12px;font:inherit}button{cursor:pointer}.row{display:flex;flex-wrap:wrap;gap:8px}.row>*{flex:1}input[type=range]{width:100%;accent-color:#08a9ef}#feedback{font-weight:700;color:#ffcb05}#status{position:absolute;top:8px;left:8px;background:#071b2bde;padding:7px;border-radius:7px}output{color:#ffcb05}label{display:block;margin:12px 0 6px}
+</style></head><body>
+<header><h1>Anatomie Motion 3D · Kniebeuge</h1><small>Version 2.8 · Quasistatische Gelenkkinematik und Schwerkraft-Balance (Demo)</small></header>
+<main><p><a href="bewegungslabor.html">← Bewegungs­labor</a></p>
+<div id="view"><div id="status">3D-Modell wird geladen …</div></div>
+<section><h2>Kniebeuge steuern</h2>
+<div class="row"><button id="play">▶ Abspielen</button><button id="reset">↺ Aufrichten</button><button id="side">Seite</button><button id="front">Schräg</button></div>
+<label for="depth">Bewegungstiefe: <output id="depthText">0 %</output></label><input id="depth" type="range" min="0" max="100" step="1" value="0">
+<label for="speed">Geschwindigkeit</label><select id="speed"><option value=".5">Langsam</option><option value="1" selected>Normal</option><option value="1.5">Schnell</option></select>
+<p id="angles"></p><p id="feedback" aria-live="polite"></p>
+<p>Die Füße bleiben auf dem Boden. Hüfte, Knie und Sprunggelenke beugen sich beidseitig koordiniert. Der Körperschwerpunkt wird aus vereinfachten Segmentmassen berechnet; die Haltung wird so angepasst, dass seine Bodenprojektion innerhalb der Standfläche bleibt.</p>
+</section><section><h2>Physikalische Grenzen</h2><p>Dies ist eine <b>quasistatische Gleichgewichtsberechnung</b>, keine vollständige Mehrkörper-Physiksimulation. Die Schwerkraft wirkt in der Schwerpunkt- und Momentberechnung (g = 9,81 m/s²). Es gibt keine modellierten Muskelmomente, Bodenreaktionskräfte, Trägheit, Ermüdung oder dynamischen Sturz. Die Anzeige „stabil“ bedeutet nur: Schwerpunktprojektion liegt innerhalb der gewählten Fußstützfläche. Das Modell ist schematisch und nicht klinisch oder biomechanisch validiert.</p></section></main>
+<script src="https://cdn.jsdelivr.net/npm/three@0.146.0/build/three.min.js"></script>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),status=$('status');
+if(!window.THREE){status.textContent='Three.js nicht geladen. Internetverbindung prüfen.';return}
+let scene,camera,renderer,group,phase=0,playing=false,direction=1,last=0,sideView=true;
+try{scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(38,1,.1,100);renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));$('view').appendChild(renderer.domElement);scene.add(new THREE.HemisphereLight(0xffffff,0x254e67,2));let sun=new THREE.DirectionalLight(0xffffff,2);sun.position.set(-3,6,5);scene.add(sun);group=new THREE.Group();scene.add(group)}catch(e){status.textContent='WebGL-Fehler: '+e.message;return}
+const V=(x,y,z=0)=>new THREE.Vector3(x,y,z),mat=c=>new THREE.MeshStandardMaterial({color:c,roughness:.8}),skin=mat(0xb1c4ce),blue=mat(0x08a9ef),red=mat(0xb83a51),yellow=mat(0xffcb05),floor=mat(0x1b4053);
+const sph=new THREE.SphereGeometry(1,18,12),cyl=new THREE.CylinderGeometry(1,1,1,14);
+function ball(p,r,m){const o=new THREE.Mesh(sph,m);o.position.copy(p);o.scale.setScalar(r);group.add(o);return o}
+function rod(a,b,r,m){const d=b.clone().sub(a),o=new THREE.Mesh(cyl,m);o.position.copy(a).add(b).multiplyScalar(.5);o.quaternion.setFromUnitVectors(V(0,1),d.clone().normalize());o.scale.set(r,d.length(),r);group.add(o);return o}
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(7,5),floor);ground.rotation.x=-Math.PI/2;ground.position.y=-.012;scene.add(ground);const grid=new THREE.GridHelper(7,14,0x346b87,0x1b4053);grid.position.y=.002;scene.add(grid);
+const L1=.48,L2=.48,torso=.61,g=9.81,footMin=-.18,footMax=.35;
+const rad=d=>d*Math.PI/180;
+function posture(d,ankleDeg){const kneeDeg=108*d,hipDeg=95*d;
+const shinTilt=ankleDeg,thighTilt=kneeDeg-shinTilt;
+const ankle=V(0,.11),knee=ankle.clone().add(V(L2*Math.sin(rad(shinTilt)),L2*Math.cos(rad(shinTilt))));
+const hip=knee.clone().add(V(-L1*Math.sin(rad(thighTilt)),L1*Math.cos(rad(thighTilt))));
+const torsoLean=Math.max(0,hipDeg-thighTilt);
+const shoulder=hip.clone().add(V(torso*Math.sin(rad(torsoLean)),torso*Math.cos(rad(torsoLean))));
+const head=shoulder.clone().add(V(.035,.20));
+const mid=(a,b)=>a.clone().add(b).multiplyScalar(.5);
+const parts=[[mid(ankle,knee),.10],[mid(knee,hip),.20],[hip,.13],[mid(hip,shoulder),.40],[head,.09],[shoulder,.08]];
+const mass=parts.reduce((s,p)=>s+p[1],0),com=parts.reduce((s,p)=>s.addScaledVector(p[0],p[1]),V(0,0)).divideScalar(mass);
+return {ankle,knee,hip,shoulder,head,com,ankleDeg, kneeDeg,hipDeg,torsoLean,torque:mass*g*(com.x-.085)}}
+function solve(d){let best=null,score=Infinity;
+for(let a=0;a<=38;a+=.25){const p=posture(d,a),err=Math.abs(p.com.x-.085);
+const cost=err+Math.max(0,p.com.x-footMax,footMin-p.com.x)*100;
+if(cost<score){score=cost;best=p}}
+return best}
+function render(d){while(group.children.length)group.remove(group.children[0]);const p=solve(d);
+for(const z of [-.15,.15]){const offset=q=>q.clone().add(V(0,0,z));
+const A=offset(p.ankle),K=offset(p.knee),H=offset(p.hip),S=offset(p.shoulder),N=offset(p.head);
+rod(A,K,.065,skin);rod(K,H,.095,blue);rod(H,S,.125,skin);
+rod(V(-.18,.055,z),V(.35,.055,z),.055,skin);
+const elbow=S.clone().add(V(.12,-.24,0)),hand=elbow.clone().add(V(.16,-.20,0));
+rod(S,elbow,.045,red);rod(elbow,hand,.037,skin);
+for(const j of [A,K,H,S])ball(j,.045,yellow);
+ball(N,.115,skin)}
+const comBall=ball(p.com.clone().add(V(0,0,.0)),.055,yellow);comBall.name='Körperschwerpunkt';
+rod(V(p.com.x,.01,0),V(p.com.x,p.com.y,0),.008,yellow);
+$('depthText').textContent=Math.round(d*100)+' %';
+$('angles').textContent='Hüfte '+Math.round(p.hipDeg)+'° · Knie '+Math.round(p.kneeDeg)+'° · Sprunggelenk '+Math.round(p.ankleDeg)+'° (Dorsalflexion) · Rumpfvorlage '+Math.round(p.torsoLean)+'°';
+const margin=Math.min(p.com.x-footMin,footMax-p.com.x);
+$('feedback').textContent=margin>=0?'Schwerpunkt innerhalb der Standfläche · Sicherheitsabstand '+Math.round(margin*100)+' cm (Modellmaß)':'Schwerpunkt außerhalb der Standfläche – instabil';
+$('feedback').style.color=margin>=0?'#8fe4bd':'#ff8d8d';
+}
+function resize(){const w=$('view').clientWidth,h=$('view').clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+function cameraSet(side){sideView=side;camera.position.set(side?0:2.6,1.55,side?4.6:4);camera.lookAt(0,.9,0)}
+$('side').onclick=()=>cameraSet(true);$('front').onclick=()=>cameraSet(false);
+$('depth').oninput=e=>{playing=false;$('play').textContent='▶ Abspielen';phase=+e.target.value/100;render(phase)};
+$('reset').onclick=()=>{playing=false;phase=0;direction=1;$('depth').value=0;$('play').textContent='▶ Abspielen';render(0)};
+$('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'⏸ Pausieren':'▶ Abspielen'};
+function tick(t){if(playing&&last){phase+=direction*(t-last)/2600*(+$('speed').value);if(phase>=1){phase=1;direction=-1}else if(phase<=0){phase=0;direction=1}$('depth').value=Math.round(phase*100);render(phase)}last=t;renderer.render(scene,camera);requestAnimationFrame(tick)}
+resize();cameraSet(true);render(0);status.style.display='none';if(window.ResizeObserver)new ResizeObserver(resize).observe($('view'));else addEventListener('resize',resize);requestAnimationFrame(tick);
+})();
+</script></body></html>
