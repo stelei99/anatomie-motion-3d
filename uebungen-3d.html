@@ -44,7 +44,7 @@ function poseArms(depth){
   for(const arm of arms){
    const shoulder=wp(arm.upper),elbow=wp(arm.lower),wrist=wp(arm.hand);
    const side=Math.sign(shoulder.clone().sub(center).dot(axis))||1;
-   const target=center.clone().addScaledVector(axis,side*barbell.userData.gripOffset);
+   const target=equipmentGrip(side).center.clone();
    const upperLength=shoulder.distanceTo(elbow),lowerLength=elbow.distanceTo(wrist);
    const toTarget=target.clone().sub(shoulder),rawDistance=toTarget.length();
    if(rawDistance<.0001)continue;
@@ -180,10 +180,14 @@ function poseGripFingers(){
  const center=wp(barbell),axis=barbell.userData.axisLocal.clone().transformDirection(barbell.matrixWorld).normalize();
  const shaftRadius=gripGeometry().radius;let close=0,processed=0,blocked=0;
  for(const chain of fingerChains){
+  const shoulder=wp(bones['upperarm_'+chain.side]);
+  const side=Math.sign(shoulder.clone().sub(center).dot(axis))||1;
+  const grip=equipmentGrip(side);if(!grip)continue;
+  const localCenter=grip.center;
   const wrist=wp(bones['hand_'+chain.side]),root=wp(chain.joints[0]);
-  const radial=root.clone().sub(center).addScaledVector(axis,-root.clone().sub(center).dot(axis));
+  const radial=root.clone().sub(localCenter).addScaledVector(axis,-root.clone().sub(localCenter).dot(axis));
   // Do not make a fist in mid-air: curl only when the palm/finger base reaches the shaft.
-  const handOffset=wrist.clone().sub(center),handRadial=handOffset.addScaledVector(axis,-handOffset.dot(axis)).length();
+  const handOffset=wrist.clone().sub(localCenter),handRadial=handOffset.addScaledVector(axis,-handOffset.dot(axis)).length();
   const baseClearance=radial.length()-shaftRadius;
   // Finger-base contact is mandatory. A nearby wrist alone does not constitute a grasp.
   // 2 cm tolerance is intentionally conservative until palm surface mesh is calibrated.
@@ -196,15 +200,15 @@ function poseGripFingers(){
    return p.add(v.lengthSq()>1e-7?v.normalize().multiplyScalar(length*.8):new THREE.Vector3(0,-length*.8,0));
   }
   function surfaceError(){
-   const p=tip(),delta=p.clone().sub(center),along=delta.dot(axis),radialDistance=delta.addScaledVector(axis,-along).length();
-   return Math.abs(radialDistance-(shaftRadius+.008))+Math.max(0,Math.abs(along)-barbell.userData.gripOffset*1.35)*2+
+   const p=tip(),delta=p.clone().sub(localCenter),along=delta.dot(axis),radialDistance=delta.addScaledVector(axis,-along).length();
+   return Math.abs(radialDistance-(shaftRadius+.008))+Math.max(0,Math.abs(along)-grip.halfLength)*2+
     Math.max(0,shaftRadius-radialDistance)*6;
   }
   // Coordinate descent: search a local hinge rotation that brings each fingertip closer to the cylinder.
   for(let pass=0;pass<2;pass++)for(let j=0;j<3;j++){
    const bone=joints[j],child=j<2?joints[j+1]:null;
    const base=bone.quaternion.clone(),p=wp(bone),segment=child?wp(child).sub(p):wp(joints[2]).sub(wp(joints[1]));
-   const toward=center.clone().sub(p).addScaledVector(axis,-center.clone().sub(p).dot(axis));
+   const toward=localCenter.clone().sub(p).addScaledVector(axis,-localCenter.clone().sub(p).dot(axis));
    const worldAxis=segment.clone().cross(toward);
    if(worldAxis.lengthSq()<1e-8)continue;
    worldAxis.normalize();
@@ -225,16 +229,17 @@ function barContact(){
  if(!barbell?.visible||!arms.length||!model)return;
  model.updateMatrixWorld(true);
  const center=wp(barbell),axis=barbell.userData.axisLocal.clone().transformDirection(barbell.matrixWorld).normalize();
- const halfLength=Math.max(.475,barbell.userData.gripOffset*1.8),radius=.018;
- const distanceToShaft=(point)=>{
-  const offset=point.clone().sub(center),along=THREE.MathUtils.clamp(offset.dot(axis),-halfLength,halfLength);
-  return point.distanceTo(center.clone().addScaledVector(axis,along))-radius;
+ const radius=barbell.userData.grip.radius;
+ const distanceToShaft=(point,grip)=>{
+  const offset=point.clone().sub(grip.center),along=THREE.MathUtils.clamp(offset.dot(axis),-grip.halfLength,grip.halfLength);
+  return point.distanceTo(grip.center.clone().addScaledVector(axis,along))-radius;
  };
  const hands=arms.map((arm)=>{
   const wrist=wp(arm.hand),elbow=wp(arm.lower);
   // A hand joint marks the wrist; offset towards the palm along the forearm axis.
   const palm=wrist.clone().add(wrist.clone().sub(elbow).normalize().multiplyScalar(Math.max(.025,wrist.distanceTo(elbow)*.18)));
-  const clearance=distanceToShaft(palm);
+  const side=Math.sign(wp(arm.upper).sub(center).dot(axis))||1;
+  const clearance=distanceToShaft(palm,equipmentGrip(side));
   return {clearance,kind:clearance<-.03?'Überschneidung':Math.abs(clearance)<.035?'Kontakt-Näherung':'kein Kontakt'};
  });
  // The shaft is intentionally supported on the upper back. Test whether it reaches
@@ -310,7 +315,7 @@ function pose(d){
  poseGripFingers();
  $('pct').textContent=Math.round(d*100)+' %';updateMuscleBars(best);
  if(barbell?.visible)barContact();else if($('contactStatus'))$('contactStatus').textContent='Langhantel ausgeschaltet';
- const gripError=barbell?.visible?arms.map(arm=>{const center=wp(barbell),axis=barbell.userData.axisLocal.clone().transformDirection(barbell.matrixWorld).normalize(),side=Math.sign(wp(arm.upper).sub(center).dot(axis))||1,target=center.addScaledVector(axis,side*barbell.userData.gripOffset);return wp(arm.hand).distanceTo(target)}):[];
+ const gripError=barbell?.visible?arms.map(arm=>{const center=wp(barbell),axis=barbell.userData.axisLocal.clone().transformDirection(barbell.matrixWorld).normalize(),side=Math.sign(wp(arm.upper).sub(center).dot(axis))||1,target=equipmentGrip(side).center.clone();return wp(arm.hand).distanceTo(target)}):[];
  $('metrics').textContent='Kniebeugung links/rechts: '+best.knees.map(x=>x.toFixed(0)+'°').join(' / ')+
  ' · Sprunggelenk (Schätzwert) L/R: '+best.ankles.map(x=>x.toFixed(0)+'°').join(' / ')+ ' · Rumpfneigung: '+Math.abs(deg(best.leanSigned)).toFixed(0)+'°'+
  ' · Hüfte nach hinten: '+(best.hipBack*100).toFixed(1)+' Modelleinheiten'+
