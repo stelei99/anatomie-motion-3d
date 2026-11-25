@@ -4,7 +4,7 @@
 <header><h1>Anatomie Motion 3D</h1><small>Bewegliches 3D-Menschenmodell · Übungsanalyse</small></header>
 <main>
 <div id="notice" role="status"><span id="loading">Lade 3D-Modell …</span><strong id="heading" hidden>Übungsstudio 3D</strong><span id="description" hidden></span></div>
-<iframe class="frame" id="module" title="Anatomie-3D-Modul" src="uebungen-3d.html?build=grip26" loading="eager" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+<iframe class="frame" id="module" title="Anatomie-3D-Modul" src="uebungen-3d.html?build=profiles27" loading="eager" referrerpolicy="strict-origin-when-cross-origin"></iframe>
 
 <footer>Das Original-Rig ist die Grundlage der weiteren Entwicklung. Die Bewegungsvorschauen sind noch nicht biomechanisch validiert.</footer></main>
 <script>
@@ -12,7 +12,7 @@
 const frame=document.getElementById('module'),buttons=[...document.querySelectorAll('[data-page]')],heading=document.getElementById('heading'),description=document.getElementById('description'),loading=document.getElementById('loading');
 const pages={
 'uebungen-3d.html':['Übungsstudio 3D','Mehrere Übungen mit dem beweglichen Original-Rig. Hüftbeugen sind noch vereinfachte Vorschauen.']};
-function choose(page,writeHash=true){if(!Object.prototype.hasOwnProperty.call(pages,page))page='uebungen-3d.html';buttons.forEach(b=>b.setAttribute('aria-selected',String(b.dataset.page===page)));heading.textContent=pages[page][0];description.textContent=pages[page][1];loading.textContent='Lade 3D-Modell …';if(frame.getAttribute('src')?.split('?')[0]!==page)frame.setAttribute('src',page+'?build=grip26');if(writeHash)history.replaceState(null,'','#'+encodeURIComponent(page));}
+function choose(page,writeHash=true){if(!Object.prototype.hasOwnProperty.call(pages,page))page='uebungen-3d.html';buttons.forEach(b=>b.setAttribute('aria-selected',String(b.dataset.page===page)));heading.textContent=pages[page][0];description.textContent=pages[page][1];loading.textContent='Lade 3D-Modell …';if(frame.getAttribute('src')?.split('?')[0]!==page)frame.setAttribute('src',page+'?build=profiles27');if(writeHash)history.replaceState(null,'','#'+encodeURIComponent(page));}
 buttons.forEach(b=>b.addEventListener('click',()=>choose(b.dataset.page)));
 frame.addEventListener('load',()=>{loading.textContent='';});
 window.addEventListener('hashchange',()=>choose(decodeURIComponent(location.hash.slice(1)),false));
