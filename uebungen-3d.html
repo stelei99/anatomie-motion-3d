@@ -30,11 +30,15 @@ function poseArms(depth){
    const dir=delta.normalize();
    const along=(a*a-b*b+dist*dist)/(2*dist),height=Math.sqrt(Math.max(0,a*a-along*along));
    // Anatomical elbow bend points downward and behind the bar.
-   const preferred=bind.forward.clone().multiplyScalar(-.9).add(new THREE.Vector3(0,-.85,0)).normalize();
+   const preferred=bind.forward.clone().multiplyScalar(-.6).add(new THREE.Vector3(0,-1.0,0)).normalize();
    const bend=preferred.addScaledVector(dir,-preferred.dot(dir)).normalize();
    const elbowTarget=shoulder.clone().addScaledVector(dir,along).addScaledVector(bend,height);
    aimBone(arm.upper,arm.lower,elbowTarget);
    aimBone(arm.lower,arm.hand,target);
+   // Reject invalid solutions: elbow and wrist must stay on their own side of the torso.
+   const elbowSide=wp(arm.lower).sub(center).dot(axis)*side;
+   const wristSide=wp(arm.hand).sub(center).dot(axis)*side;
+   if(elbowSide<-.015||wristSide<-.015){arm.upper.quaternion.copy(arm.upperQ);arm.lower.quaternion.copy(arm.lowerQ);arm.hand.quaternion.copy(arm.handQ);model.updateMatrixWorld(true)}
    // Leave wrist in its neutral rig orientation until local hand axes and finger bones are calibrated.
    // Arbitrary hand-axis rotations made the palms stand vertically in the previous build.
   }
@@ -58,7 +62,7 @@ function combinedCom(bodyCenter){if(!barbell||!barbell.visible)return bodyCenter
 function pose(d){
  if(!model)return;
  d=Math.max(0,Math.min(1,d));
- const reset=()=>{for(const l of legs){l.thigh.quaternion.copy(l.thighQ);l.calf.quaternion.copy(l.calfQ);l.foot.quaternion.copy(l.footLocalQ)}for(const arm of arms){arm.upper.quaternion.copy(arm.upperQ);arm.lower.quaternion.copy(arm.lowerQ)}bones.pelvis.position.copy(bind.pelvisPos);bones.pelvis.quaternion.copy(bind.pelvisQ);if(bones.spine_01&&bind.spineQ)bones.spine_01.quaternion.copy(bind.spineQ);model.updateMatrixWorld(true)};
+ const reset=()=>{for(const l of legs){l.thigh.quaternion.copy(l.thighQ);l.calf.quaternion.copy(l.calfQ);l.foot.quaternion.copy(l.footLocalQ)}for(const arm of arms){arm.upper.quaternion.copy(arm.upperQ);arm.lower.quaternion.copy(arm.lowerQ);arm.hand.quaternion.copy(arm.handQ)}bones.pelvis.position.copy(bind.pelvisPos);bones.pelvis.quaternion.copy(bind.pelvisQ);if(bones.spine_01&&bind.spineQ)bones.spine_01.quaternion.copy(bind.spineQ);model.updateMatrixWorld(true)};
  // Foot-based anatomical forward axis; retain it at every frame (no hard-coded +Z assumption).
  const forward=bind.forward.clone(),legLength=bind.legLength;
  const footMid=legs[0].ankle.clone().add(legs[1].ankle).multiplyScalar(.5);
