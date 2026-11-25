@@ -80,10 +80,9 @@ async function load(){try{const r=await fetch('rig-labor.html',{cache:'no-store'
 function calibrateDepth(){
  if(!model)return;
  const target=Number($('preset').value);
- const old=depthScale;
- const sample=scale=>{depthScale=scale;pose(1);return (Number($('metrics').textContent.match(/Kniebeugung links\/rechts: ([\\d.]+)/)?.[1])||0)};
- let low=.6,high=2.0,angleLow=sample(low),angleHigh=sample(high);
- if(angleHigh<angleLow){const tmp=low;low=high;high=tmp}
+ const sample=scale=>{depthScale=scale;pose(1);return (Number($('metrics').textContent.match(/Kniebeugung links\/rechts: ([0-9.]+)/)?.[1])||0)};
+ let low=.6,high=2.0;
+ sample(low);sample(high);
  for(let i=0;i<8;i++){const mid=(low+high)/2,angle=sample(mid);if(angle<target)low=mid;else high=mid}
  depthScale=Math.max(.6,Math.min(2,(low+high)/2));
  pose(phase);
