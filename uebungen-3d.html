@@ -24,23 +24,19 @@ function poseArms(depth){
   for(const arm of arms){
    const shoulder=wp(arm.upper),elbow=wp(arm.lower),hand=wp(arm.hand);
    const side=Math.sign(shoulder.clone().sub(center).dot(axis))||1;
-   const target=center.clone().addScaledVector(axis,side*barbell.userData.gripOffset);
+   const target=center.clone().addScaledVector(axis,side*barbell.userData.gripOffset).add(new THREE.Vector3(0,-.045,0));
    const a=shoulder.distanceTo(elbow),b=elbow.distanceTo(hand),delta=target.clone().sub(shoulder);
    const dist=Math.max(.0001,Math.min(a+b-.0005,delta.length()));
    const dir=delta.normalize();
    const along=(a*a-b*b+dist*dist)/(2*dist),height=Math.sqrt(Math.max(0,a*a-along*along));
    // Anatomical elbow bend points downward and behind the bar.
-   const preferred=bind.forward.clone().multiplyScalar(-.35).add(new THREE.Vector3(0,-1.4,0)).normalize();
+   const preferred=bind.forward.clone().multiplyScalar(-1.2).add(new THREE.Vector3(0,-.45,0)).normalize();
    const bend=preferred.addScaledVector(dir,-preferred.dot(dir)).normalize();
    const elbowTarget=shoulder.clone().addScaledVector(dir,along).addScaledVector(bend,height);
    aimBone(arm.upper,arm.lower,elbowTarget);
    aimBone(arm.lower,arm.hand,target);
-   // Bring palm toward the bar instead of leaving the bind-pose open palm facing the camera.
-   // This is a wrist orientation preview, not finger-contact physics.
-   const palmForward=bind.forward.clone().multiplyScalar(-1);
-   const handAxis=wp(arm.hand).sub(wp(arm.lower)).normalize();
-   const palmTarget=palmForward.addScaledVector(handAxis,-palmForward.dot(handAxis)).normalize();
-   if(palmTarget.lengthSq()>.01){const handUp=new THREE.Vector3(0,1,0).applyQuaternion(wq(arm.hand));const upProjected=handUp.addScaledVector(handAxis,-handUp.dot(handAxis)).normalize();if(upProjected.lengthSq()>.01){const angle=Math.atan2(handAxis.dot(upProjected.clone().cross(palmTarget)),upProjected.dot(palmTarget));arm.hand.rotateOnAxis(new THREE.Vector3(0,1,0),THREE.MathUtils.clamp(angle,-.65,.65));}}
+   // Leave wrist in its neutral rig orientation until local hand axes and finger bones are calibrated.
+   // Arbitrary hand-axis rotations made the palms stand vertically in the previous build.
   }
   return;
  }
@@ -57,7 +53,7 @@ function poseArms(depth){
   setWorldRotation(arm.upper,chosen);
  }
 }
-function createBarbell(){if(barbell){barbell.parent?.remove(barbell);barbell=null}const spine=bones.spine_03||bones.spine_02||bones.spine_01;if(!spine||!arms.length)return;model.updateMatrixWorld(true);const left=wp(arms[0].upper),right=wp(arms[1].upper),mid=left.clone().add(right).multiplyScalar(.5),span=left.distanceTo(right),axis=right.clone().sub(left).normalize();const back=bind.forward.clone().multiplyScalar(-Math.max(.035,span*.13));const center=mid.add(back);const root=new THREE.Group();spine.add(root);root.position.copy(spine.worldToLocal(center.clone()));const localAxis=axis.clone().transformDirection(new THREE.Matrix4().extractRotation(spine.matrixWorld).invert()).normalize();const metal=new THREE.MeshStandardMaterial({color:0xaeb9c2,metalness:.72,roughness:.28}),plates=new THREE.MeshStandardMaterial({color:0x202d38,metalness:.3,roughness:.62});const rod=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,Math.max(.95,span*2.9),16),metal);rod.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),localAxis);root.add(rod);for(const sign of [-1,1])for(const off of [.89,1.02]){const disc=new THREE.Mesh(new THREE.CylinderGeometry(.14,.14,.055,24),plates);disc.quaternion.copy(rod.quaternion);disc.position.copy(localAxis).multiplyScalar(sign*span*(off+.20));root.add(disc)}barbell=root;barbell.visible=$('barVisible').checked;status.textContent='Langhantel geladen';barbell.userData.axisLocal=localAxis.clone();barbell.userData.gripOffset=span*.64;barbell.userData.center=new THREE.Vector3(0,0,0)}
+function createBarbell(){if(barbell){barbell.parent?.remove(barbell);barbell=null}const spine=bones.spine_03||bones.spine_02||bones.spine_01;if(!spine||!arms.length)return;model.updateMatrixWorld(true);const left=wp(arms[0].upper),right=wp(arms[1].upper),mid=left.clone().add(right).multiplyScalar(.5),span=left.distanceTo(right),axis=right.clone().sub(left).normalize();const back=bind.forward.clone().multiplyScalar(-Math.max(.035,span*.13));const center=mid.add(back);const root=new THREE.Group();spine.add(root);root.position.copy(spine.worldToLocal(center.clone()));const localAxis=axis.clone().transformDirection(new THREE.Matrix4().extractRotation(spine.matrixWorld).invert()).normalize();const metal=new THREE.MeshStandardMaterial({color:0xaeb9c2,metalness:.72,roughness:.28}),plates=new THREE.MeshStandardMaterial({color:0x202d38,metalness:.3,roughness:.62});const rod=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,Math.max(.95,span*2.9),16),metal);rod.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),localAxis);root.add(rod);for(const sign of [-1,1])for(const off of [.89,1.02]){const disc=new THREE.Mesh(new THREE.CylinderGeometry(.14,.14,.055,24),plates);disc.quaternion.copy(rod.quaternion);disc.position.copy(localAxis).multiplyScalar(sign*span*(off+.20));root.add(disc)}barbell=root;barbell.visible=$('barVisible').checked;status.textContent='Langhantel geladen';barbell.userData.axisLocal=localAxis.clone();barbell.userData.gripOffset=span*.56;barbell.userData.center=new THREE.Vector3(0,0,0)}
 function combinedCom(bodyCenter){if(!barbell||!barbell.visible)return bodyCenter;barbell.updateWorldMatrix(true,false);const barCenter=barbell.getWorldPosition(V());const bodyMass=75,barMass=Number($('loadKg').value);return bodyCenter.clone().multiplyScalar(bodyMass).addScaledVector(barCenter,barMass).divideScalar(bodyMass+barMass)}
 function pose(d){
  if(!model)return;
