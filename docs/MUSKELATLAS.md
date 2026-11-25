@@ -29,6 +29,27 @@ Die bestehende animierte Figur mit 53 Rig-Knochen bleibt als Bewegungsgrundlage.
 }
 ```
 
+## Gesamtumfang: vollständiger Muskelatlas des Körpers
+
+Das Zielmodell umfasst alle größeren oberflächlichen und relevanten tiefen Skelettmuskeln, jeweils links/rechts getrennt, soweit anatomisch vorhanden. Keine Beschränkung auf Kniebeugenmuskeln.
+
+| Region | Erforderliche Bereiche (Auswahl, nicht abschließend) |
+|---|---|
+| Kopf und Hals | Mimische Muskulatur, Kaumuskeln, Sternocleidomastoideus, Skalenusgruppe, tiefe Halsmuskulatur |
+| Schultergürtel | Trapezius, Deltoideus, Rotatorenmanschette, Serratus anterior, Rhomboiden, Levator scapulae |
+| Brust und Rücken | Pectoralis major/minor, Latissimus dorsi, Erector spinae, Multifidi, tiefe Rückenmuskulatur |
+| Bauch und Becken | Rectus abdominis, Obliquus externus/internus, Transversus abdominis, Iliopsoas, Beckenboden (separate Tiefenschicht) |
+| Oberarm, Unterarm, Hand | Bizeps, Brachialis, Trizeps, Pronatoren/Supinatoren, Flexoren/Extensoren, intrinsische Handmuskeln |
+| Gesäß und Hüfte | Gluteus maximus/medius/minimus, tiefe Außenrotatoren, Tensor fasciae latae |
+| Oberschenkel | Quadrizepsköpfe, Hamstrings, Adduktoren, Sartorius, Gracilis |
+| Unterschenkel und Fuß | Gastrocnemius, Soleus, Tibialis anterior/posterior, Fibularisgruppe, Zehenflexoren/-extensoren, intrinsische Fußmuskeln |
+
+**Anatomische Genauigkeit:** Mehrschichtige Ansicht (oberflächlich/mittel/tief) mit Ausblenden einzelner Muskeln; Sehnen und Faszien als separat gekennzeichnete Strukturen, nicht als Muskeln behandeln. Links/rechts spiegeln nur, wo die Anatomie es rechtfertigt. Ursprung, Ansatz und Funktion sind Metadaten, nicht automatisch aus einem 53-Knochen-Rig ableitbar.
+
+**Rig-Grenze:** 53 Knochen reichen nicht für die eigenständige, anatomisch präzise Bewegung aller kleinen Muskeln und knöchernen Strukturen (z. B. Schulterblatt, Finger, Hals). Für diese Regionen ist eine erweiterte Rig-Hierarchie oder zusätzliche Deformationssteuerung erforderlich. Der bestehende Kniebeugen-Prototyp darf dadurch nicht beschädigt werden.
+
+**Lieferphasen:** (1) lizenzgeprüftes segmentiertes Ganzkörper-Asset, (2) Ganzkörper-Atlas mit Auswahl/Schichten in Ruhepose, (3) Registrierung an bestehendes Rig und Animation der großen Muskeln, (4) erweiterte Gelenke/Deformation für Hände, Hals, Schultergürtel und tiefe Muskeln, (5) weitere Übungen und Validierung auf Android/Windows. Vollständige anatomische Abdeckung ist das Ziel der Architektur, nicht der aktuelle Implementierungsstand.
+
 ## Erste Muskelgruppen für die Kniebeuge
 | Muskeln | Funktion bei Kniebeuge | Anzeige |
 |---|---|---|
