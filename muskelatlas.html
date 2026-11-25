@@ -66,8 +66,8 @@ function setDepth(raw){
  const uy=dy/Math.max(D,.00001),uz=dz/Math.max(D,.00001);
  const along=(lower*lower-upper*upper+reach*reach)/(2*reach);
  const height=Math.sqrt(Math.max(0,lower*lower-along*along));
- const knee1={y:ankle+uy*along-uz*height,z:uz*along+uy*height*forwardSign};
- const knee2={y:ankle+uy*along+uz*height,z:uz*along-uy*height*forwardSign};
+ const knee1={y:ankle+uy*along-uz*height,z:uz*along+uy*height};
+ const knee2={y:ankle+uy*along+uz*height,z:uz*along-uy*height};
  // Prefer the knee that moves forward relative to the foot.
  const k=(knee1.z*forwardSign>=knee2.z*forwardSign)?knee1:knee2;
  const thighA=Math.atan2(k.z-targetHipZ,k.y-targetHipY)-Math.PI;
