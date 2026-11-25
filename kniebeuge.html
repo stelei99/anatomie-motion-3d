@@ -58,7 +58,8 @@ rod(V(p.com.x,.01,0),V(p.com.x,p.com.y,0),.008,yellow);
 $('depthText').textContent=Math.round(d*100)+' %';
 $('angles').textContent='Hüfte '+Math.round(p.hipDeg)+'° · Knie '+Math.round(p.kneeDeg)+'° · Sprunggelenk '+Math.round(p.ankleDeg)+'° (Dorsalflexion) · Rumpfvorlage '+Math.round(p.torsoLean)+'°';
 const margin=Math.min(p.com.x-footMin,footMax-p.com.x);
-$('feedback').textContent=margin>=0?'Schwerpunkt innerhalb der Standfläche · Sicherheitsabstand '+Math.round(margin*100)+' cm (Modellmaß)':'Schwerpunkt außerhalb der Standfläche – instabil';
+$('angles').textContent+=' · normiertes Gravitationsmoment um Fußmitte '+p.torque.toFixed(2)+' N·m (bei 1 kg Modellmasse)';
+$('feedback').textContent=margin>=0?'Schwerpunkt innerhalb der Standfläche · Sicherheitsabstand '+margin.toFixed(2)+' Modelleinheiten':'Schwerpunkt außerhalb der Standfläche – instabil';
 $('feedback').style.color=margin>=0?'#8fe4bd':'#ff8d8d';
 }
 function resize(){const w=$('view').clientWidth,h=$('view').clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
