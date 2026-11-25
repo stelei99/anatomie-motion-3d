@@ -54,9 +54,9 @@ function pose(d){
  let best=null;
  if(d===0){best=evaluate(0,0)}
  else{
-  for(let h=0;h<=5;h++)for(let t=0;t<=10;t++){
+  for(let h=0;h<=4;h++)for(let t=0;t<=7;t++){
    const setback=legLength*d*(.08+h*.027);
-   const lean=THREE.MathUtils.degToRad(t*4)*d;
+   const lean=THREE.MathUtils.degToRad(t*5)*d;
    const r=evaluate(setback,lean);
    if(!best||r.score<best.score)best={...r,lean,setback};
   }
@@ -68,9 +68,9 @@ function pose(d){
  $('pct').textContent=Math.round(d*100)+' %';
  $('metrics').textContent='Kniebeugung links/rechts: '+best.knees.map(x=>x.toFixed(0)+'°').join(' / ')+
  ' · Rumpfneigung: '+Math.abs(deg(best.leanSigned)).toFixed(0)+'°'+
- ' · Hüfte nach hinten: '+(best.hipBack*100).toFixed(1)+' Modell-cm'+
+ ' · Hüfte nach hinten: '+(best.hipBack*100).toFixed(1)+' Modelleinheiten'+
  ' · Schwerpunkt: '+(margin>=0?'innerhalb':'außerhalb')+' der angenäherten Standfläche'+
- ' · Fußkontaktabweichung: '+(best.footError*100).toFixed(1)+' Modell-cm'+
+ ' · Fußkontaktabweichung: '+(best.footError*100).toFixed(1)+' Modelleinheiten'+
  ' · g = 9,81 m/s² (quasistatische Prüfung)';
 }
 function setup(gltf){model=gltf.scene;scene.add(model);model.traverse(o=>{if(o.isBone)bones[o.name]=o});const names=['pelvis','thigh_l','thigh_r','calf_l','calf_r','foot_l','foot_r'];if(names.some(n=>!bones[n])){status.textContent='Erforderliche Rig-Knochen fehlen: '+names.filter(n=>!bones[n]).join(', ');return}model.updateMatrixWorld(true);bind={pelvisPos:bones.pelvis.position.clone(),pelvisQ:bones.pelvis.quaternion.clone(),spineQ:bones.spine_01?.quaternion.clone()};for(const s of ['l','r']){const thigh=bones['thigh_'+s],calf=bones['calf_'+s],foot=bones['foot_'+s],hip=wp(thigh),knee=wp(calf),ankle=wp(foot);legs.push({thigh,calf,foot,knee0:knee,ankle,L1:hip.distanceTo(knee),L2:knee.distanceTo(ankle),thighQ:thigh.quaternion.clone(),calfQ:calf.quaternion.clone(),footLocalQ:foot.quaternion.clone(),footQ:wq(foot)})}const forward=V();for(const side of ['l','r']){const foot=bones['foot_'+side],toe=bones['ball_'+side]||bones['toe_'+side];if(toe)forward.add(wp(toe).sub(wp(foot)))}forward.y=0;if(forward.lengthSq()<1e-6)forward.set(0,0,-1);forward.normalize();bind.forward=forward;bind.legLength=legs.reduce((sum,l)=>sum+l.L1+l.L2,0)/2;bind.footLength=bind.legLength*.36;status.textContent='Original-Rig geladen: '+Object.keys(bones).length+' Knochen. Kniebeuge steuerbar.';pose(0)}
