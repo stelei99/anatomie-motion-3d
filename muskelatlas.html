@@ -1,96 +1,81 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Anatomie Motion 3D – Ganzkörper-Muskelatlas v3.3</title><style>*{box-sizing:border-box}body{margin:0;background:#061e31;color:#eaf7fd;font:15px system-ui}header{background:#07345b;border-bottom:3px solid #08a9ef;padding:15px}h1{font-size:21px;margin:0 0 5px}main{max-width:1150px;margin:auto;padding:12px}a{color:#8bdcff}.panel{background:#0b304b;border:1px solid #35617b;border-radius:12px;padding:13px;margin:10px 0}#view{display:block;width:100%;height:65vh;min-height:410px;background:#102a3b;border-radius:12px;touch-action:none}button,select,input{border-radius:8px;padding:10px;border:1px solid #44738e;background:#174b68;color:white;font:inherit}button{cursor:pointer}button.active{background:#08a9ef;color:#061e31}input[type=search]{width:100%}.controls{display:flex;gap:8px;flex-wrap:wrap}.controls>*{flex:1}#list{max-height:220px;overflow:auto}#list button{display:block;text-align:left;width:100%;margin:4px 0}small{color:#bed5e4}#status{color:#ffcb05} .legend{display:flex;gap:12px;flex-wrap:wrap}.sw{display:inline-block;width:13px;height:13px;border-radius:3px;margin-right:5px;vertical-align:middle} .cols{display:grid;grid-template-columns:1fr 290px;gap:12px}@media(max-width:720px){.cols{grid-template-columns:1fr}#view{height:55vh;min-height:350px}}</style></head><body><header><h1>Anatomie Motion 3D · Ganzkörper-Muskelatlas v3.3</h1><small>Separat segmentierte 3D-Muskeln · Auswahl · anatomische Regionen · Kniebeugen-Beteiligung</small></header><main><p><a href="kniebeuge-rig.html">← Bewegliche Kniebeuge v2.13</a> · <a href="rig-labor.html">Original-Rig</a></p><div class="panel"><strong>Modellstatus</strong><p id="status">Lade anatomisches Muskelmodell …</p><small>Die Atlasansicht verwendet ein eigenständiges anatomisches 3D-Asset. Die Muskelmeshes sind noch nicht mit dem beweglichen 53-Knochen-Rig geskinnt. Die Kniebeuge verwendet eine verbesserte geometrische Bein-Kinematik. Sie ist weiterhin keine präzise 53-Knochen-Skinning-Kopplung.</small></div><div class="panel"><strong>Kniebeuge – experimentelle Ganzkörperbewegung</strong><label style="display:block;margin:10px 0">Beugetiefe: <strong id="depthLabel">0 %</strong></label><input id="depth" type="range" min="0" max="100" value="0" style="width:100%;accent-color:#08a9ef"><div class="controls"><button id="play">▶ Kniebeuge</button><button id="stand">↺ Aufrichten</button><button id="frontdir">Beugerichtung umkehren</button></div><p id="angles">Kniebeugung: 0°</p><small>Experimentelle GPU-Verformung anhand angenäherter Hüft-, Knie- und Sprunggelenkpositionen. Dies ist noch keine anatomisch validierte Rig-/Skinning-Kopplung. Einzelne Muskeln können sich unnatürlich verformen oder überlappen.</small></div><div class="controls"><button id="normal" class="active">Alle Muskeln</button><button id="squat">Kniebeuge: Muskelbeteiligung</button><button id="reset">Ansicht zurücksetzen</button></div><div class="cols"><div><canvas id="view"></canvas><div class="panel"><div class="legend"><span><i class="sw" style="background:#a72a34"></i>Hauptbeteiligung</span><span><i class="sw" style="background:#ed9298"></i>Unterstützung/Stabilisierung</span><span><i class="sw" style="background:#a9b1ba"></i>Übrige</span></div><small>Die Farben beschreiben funktionelle Beteiligung, keine gemessene Muskelaktivität. Drehen: ziehen · Zoom: Mausrad/Pinch · Muskel auswählen: antippen.</small></div></div><div><div class="panel"><strong>Muskel finden</strong><p><input id="search" type="search" placeholder="Muskelname suchen …"></p><div class="controls"><select id="region"><option value="">Alle Regionen</option><option value="head">Kopf / Hals</option><option value="torso">Rumpf / Rücken</option><option value="arm">Schulter / Arme</option><option value="leg">Becken / Beine</option></select><button id="clear">Auswahl löschen</button></div><p id="selected">Tippe auf einen Muskel im Modell oder in der Liste.</p><div id="list"></div></div></div></div><div class="panel"><strong>Modellquelle und Lizenz</strong><p>3D-Muskeldaten: <a href="https://github.com/organui/muscles-3d">OrganUI Muscles</a>, abgeleitet von BodyParts3D, © The Database Center for Life Science, CC BY-SA 2.1 Japan. Die anatomischen Modelldaten behalten ihre ShareAlike-Lizenz. Die Zuordnung zu Übungen ist eine didaktische Einordnung, keine klinisch validierte Aktivitätsmessung.</p><small>Online-Verbindung erforderlich; Modell wird derzeit über ein externes GitHub-CDN geladen. Für eine verlässliche Offline- und Langzeitversion muss das Asset mit Quellenangaben und Prüfsumme lokal eingebunden werden.</small></div></main><script src="https://cdn.jsdelivr.net/npm/three@0.146.0/build/three.min.js"></script><script src="https://cdn.jsdelivr.net/npm/three@0.146.0/examples/js/loaders/GLTFLoader.js"></script><script>
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Anatomie Motion 3D – Ganzkörper-Muskelatlas v3.4</title><style>*{box-sizing:border-box}body{margin:0;background:#061e31;color:#eaf7fd;font:15px system-ui}header{background:#07345b;border-bottom:3px solid #08a9ef;padding:15px}h1{font-size:21px;margin:0 0 5px}main{max-width:1150px;margin:auto;padding:12px}a{color:#8bdcff}.panel{background:#0b304b;border:1px solid #35617b;border-radius:12px;padding:13px;margin:10px 0}#view{display:block;width:100%;height:65vh;min-height:410px;background:#102a3b;border-radius:12px;touch-action:none}button,select,input{border-radius:8px;padding:10px;border:1px solid #44738e;background:#174b68;color:white;font:inherit}button{cursor:pointer}button.active{background:#08a9ef;color:#061e31}input[type=search]{width:100%}.controls{display:flex;gap:8px;flex-wrap:wrap}.controls>*{flex:1}#list{max-height:220px;overflow:auto}#list button{display:block;text-align:left;width:100%;margin:4px 0}small{color:#bed5e4}#status{color:#ffcb05} .legend{display:flex;gap:12px;flex-wrap:wrap}.sw{display:inline-block;width:13px;height:13px;border-radius:3px;margin-right:5px;vertical-align:middle} .cols{display:grid;grid-template-columns:1fr 290px;gap:12px}@media(max-width:720px){.cols{grid-template-columns:1fr}#view{height:55vh;min-height:350px}}</style></head><body><header><h1>Anatomie Motion 3D · Ganzkörper-Muskelatlas v3.4</h1><small>Separat segmentierte 3D-Muskeln · Auswahl · anatomische Regionen · Kniebeugen-Beteiligung</small></header><main><p><a href="kniebeuge-rig.html">← Bewegliche Kniebeuge v2.13</a> · <a href="rig-labor.html">Original-Rig</a></p><div class="panel"><strong>Modellstatus</strong><p id="status">Lade anatomisches Muskelmodell …</p><small>Die Atlasansicht verwendet ein eigenständiges anatomisches 3D-Asset. Die Muskelmeshes sind noch nicht mit dem beweglichen 53-Knochen-Rig geskinnt. Die Kniebeuge verwendet eine verbesserte geometrische Bein-Kinematik. Sie ist weiterhin keine präzise 53-Knochen-Skinning-Kopplung.</small></div><div class="panel"><strong>Kniebeuge – experimentelle Ganzkörperbewegung</strong><label style="display:block;margin:10px 0">Beugetiefe: <strong id="depthLabel">0 %</strong></label><input id="depth" type="range" min="0" max="100" value="0" style="width:100%;accent-color:#08a9ef"><div class="controls"><button id="play">▶ Kniebeuge</button><button id="stand">↺ Aufrichten</button><button id="frontdir">Beugerichtung umkehren</button><button id="axis">Bewegungsachse: X</button></div><p id="angles">Kniebeugung: 0°</p><small>Experimentelle Kniebeuge mit korrigierter Bewegungsachse und Zweigelenk-Kinematik. Dies ist noch keine anatomisch validierte Rig-/Skinning-Kopplung. Einzelne Muskeln können sich unnatürlich verformen oder überlappen.</small></div><div class="controls"><button id="normal" class="active">Alle Muskeln</button><button id="squat">Kniebeuge: Muskelbeteiligung</button><button id="reset">Ansicht zurücksetzen</button></div><div class="cols"><div><canvas id="view"></canvas><div class="panel"><div class="legend"><span><i class="sw" style="background:#a72a34"></i>Hauptbeteiligung</span><span><i class="sw" style="background:#ed9298"></i>Unterstützung/Stabilisierung</span><span><i class="sw" style="background:#a9b1ba"></i>Übrige</span></div><small>Die Farben beschreiben funktionelle Beteiligung, keine gemessene Muskelaktivität. Drehen: ziehen · Zoom: Mausrad/Pinch · Muskel auswählen: antippen.</small></div></div><div><div class="panel"><strong>Muskel finden</strong><p><input id="search" type="search" placeholder="Muskelname suchen …"></p><div class="controls"><select id="region"><option value="">Alle Regionen</option><option value="head">Kopf / Hals</option><option value="torso">Rumpf / Rücken</option><option value="arm">Schulter / Arme</option><option value="leg">Becken / Beine</option></select><button id="clear">Auswahl löschen</button></div><p id="selected">Tippe auf einen Muskel im Modell oder in der Liste.</p><div id="list"></div></div></div></div><div class="panel"><strong>Modellquelle und Lizenz</strong><p>3D-Muskeldaten: <a href="https://github.com/organui/muscles-3d">OrganUI Muscles</a>, abgeleitet von BodyParts3D, © The Database Center for Life Science, CC BY-SA 2.1 Japan. Die anatomischen Modelldaten behalten ihre ShareAlike-Lizenz. Die Zuordnung zu Übungen ist eine didaktische Einordnung, keine klinisch validierte Aktivitätsmessung.</p><small>Online-Verbindung erforderlich; Modell wird derzeit über ein externes GitHub-CDN geladen. Für eine verlässliche Offline- und Langzeitversion muss das Asset mit Quellenangaben und Prüfsumme lokal eingebunden werden.</small></div></main><script src="https://cdn.jsdelivr.net/npm/three@0.146.0/build/three.min.js"></script><script src="https://cdn.jsdelivr.net/npm/three@0.146.0/examples/js/loaders/GLTFLoader.js"></script><script>
 (()=>{const $=id=>document.getElementById(id);if(!window.THREE||!THREE.GLTFLoader){$('status').textContent='Three.js konnte nicht geladen werden';return}
-const scene=new THREE.Scene(),renderer=new THREE.WebGLRenderer({canvas:$('view'),antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.setClearColor(0x102a3b);const camera=new THREE.PerspectiveCamera(35,1,.01,1000);scene.add(new THREE.HemisphereLight(0xffffff,0x647d9b,2.2));const sun=new THREE.DirectionalLight(0xffffff,2);sun.position.set(4,8,6);scene.add(sun);let root,meshes=[],filtered=[],selected=null,mode='normal',center=new THREE.Vector3(),radius=1,az=.2,el=.05,dist=4,drag=null,playing=false,animT=0,lastFrame=0,forwardSign=1,rigParams=null,uniforms=[];
+const scene=new THREE.Scene(),renderer=new THREE.WebGLRenderer({canvas:$('view'),antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.setClearColor(0x102a3b);const camera=new THREE.PerspectiveCamera(35,1,.01,1000);scene.add(new THREE.HemisphereLight(0xffffff,0x647d9b,2.2));const sun=new THREE.DirectionalLight(0xffffff,2);sun.position.set(4,8,6);scene.add(sun);let root,meshes=[],filtered=[],selected=null,mode='normal',center=new THREE.Vector3(),radius=1,az=.2,el=.05,dist=4,drag=null,playing=false,animT=0,lastFrame=0,forwardSign=1,forwardAxis=0,rigParams=null,uniforms=[];
 const primary=/quadriceps|vastus|rectus femoris|gluteus maximus|adductor magnus/i,support=/gastrocnemius|soleus|hamstring|biceps femoris|semitendinosus|semimembranosus|erector spinae|obliquus|transversus abdominis|rectus abdominis|gluteus medius|gluteus minimus|tibialis/i;
 const classify=n=>primary.test(n)?'primary':support.test(n)?'support':'other';const palette={primary:0xa72a34,support:0xed9298,other:0xa9b1ba};
 const region=n=>/head|face|neck|temporal|masseter|sternocleid|scalen|occipital/i.test(n)?'head':/brach|biceps brach|triceps brach|deltoid|forearm|carpi|digitorum|pronator|supinator|pectoralis/i.test(n)?'arm':/femor|vastus|glute|adductor|soleus|gastrocnem|tibial|fibular|perone|gracilis|sartorius|semimembr|semitend|foot|pedis|plantar/i.test(n)?'leg':'torso';
-// GPU prototype: world-space piecewise hip/knee/ankle deformation. Not true muscle skinning.
+// Kinematic preview with explicit sagittal axis and continuous joint blending.
+// The original atlas meshes are NOT skinned; anatomical muscle deformation remains approximate.
 function makeDeformer(mesh){
- if(!rigParams)return;
  const inv=mesh.matrixWorld.clone().invert();
- const u={uInvModel:{value:inv},uHipY:{value:rigParams.hip},uKneeY:{value:rigParams.knee},uAnkleY:{value:rigParams.ankle},uHipShift:{value:new THREE.Vector2()},uKneeShift:{value:new THREE.Vector2()},uTorsoAngle:{value:0},uThighAngle:{value:0},uShinAngle:{value:0}};
+ const u={uInvModel:{value:inv},uHipY:{value:rigParams.hip},uKneeY:{value:rigParams.knee},uAnkleY:{value:rigParams.ankle},
+ uHipShift:{value:new THREE.Vector2()},uKneeShift:{value:new THREE.Vector2()},uTorsoAngle:{value:0},
+ uThighAngle:{value:0},uShinAngle:{value:0},uForwardAxis:{value:forwardAxis}};
  uniforms.push(u);
  mesh.material.onBeforeCompile=shader=>{
-  Object.assign(shader.uniforms,u);
-  shader.vertexShader=shader.vertexShader.replace('#include <common>',`#include <common>
+ Object.assign(shader.uniforms,u);
+ shader.vertexShader=shader.vertexShader.replace('#include <common>',`#include <common>
 uniform mat4 uInvModel;
-uniform float uHipY;
-uniform float uKneeY;
-uniform float uAnkleY;
-uniform vec2 uHipShift;
-uniform vec2 uKneeShift;
-uniform float uTorsoAngle;
-uniform float uThighAngle;
-uniform float uShinAngle;
-vec2 rotYZ(vec2 yz,float a){return vec2(cos(a)*yz.x-sin(a)*yz.y,sin(a)*yz.x+cos(a)*yz.y);}
+uniform float uHipY,uKneeY,uAnkleY,uTorsoAngle,uThighAngle,uShinAngle,uForwardAxis;
+uniform vec2 uHipShift,uKneeShift;
+vec2 turn(vec2 yf,float a){return vec2(cos(a)*yf.x-sin(a)*yf.y,sin(a)*yf.x+cos(a)*yf.y);}
 `);
-  shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
+ shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
 vec3 wp=(modelMatrix*vec4(transformed,1.0)).xyz;
-vec2 oldYZ=wp.yz;
-vec2 newYZ=oldYZ;
-float hip=uHipY, knee=uKneeY, ankle=uAnkleY;
-vec2 hipMove=uHipShift;
-if(wp.y>=hip){
-  newYZ=vec2(hip,0.0)+hipMove+rotYZ(oldYZ-vec2(hip,0.0),uTorsoAngle);
-}else if(wp.y>=knee){
-  newYZ=vec2(hip,0.0)+hipMove+rotYZ(oldYZ-vec2(hip,0.0),uThighAngle);
-}else{
-  newYZ=vec2(ankle,0.0)+rotYZ(oldYZ-vec2(ankle,0.0),uShinAngle);
-}
-// Blend across the joints to reduce visible seams.
-float band=max((hip-ankle)*0.035,0.00001);
-if(abs(wp.y-hip)<band){
-  vec2 upper=vec2(hip,0.0)+hipMove+rotYZ(oldYZ-vec2(hip,0.0),uTorsoAngle);
-  vec2 lower=vec2(hip,0.0)+hipMove+rotYZ(oldYZ-vec2(hip,0.0),uThighAngle);
-  newYZ=mix(lower,upper,smoothstep(hip-band,hip+band,wp.y));
-}
-if(abs(wp.y-knee)<band){
-  vec2 upper=vec2(hip,0.0)+hipMove+rotYZ(oldYZ-vec2(hip,0.0),uThighAngle);
-  vec2 lower=vec2(ankle,0.0)+rotYZ(oldYZ-vec2(ankle,0.0),uShinAngle);
-  newYZ=mix(lower,upper,smoothstep(knee-band,knee+band,wp.y));
-}
-wp.yz=newYZ;
+float f=(uForwardAxis<0.5)?wp.x:wp.z;
+vec2 original=vec2(wp.y,f);
+float hip=uHipY,knee=uKneeY,ankle=uAnkleY;
+vec2 hipP=vec2(hip,0.0)+uHipShift;
+vec2 torso=hipP+turn(original-vec2(hip,0.0),uTorsoAngle);
+vec2 thigh=hipP+turn(original-vec2(hip,0.0),uThighAngle);
+vec2 shin=vec2(ankle,0.0)+turn(original-vec2(ankle,0.0),uShinAngle);
+float band=max((hip-ankle)*0.085,0.00001);
+vec2 moved;
+if(wp.y>hip+band) moved=torso;
+else if(wp.y>hip-band) moved=mix(thigh,torso,smoothstep(hip-band,hip+band,wp.y));
+else if(wp.y>knee+band) moved=thigh;
+else if(wp.y>knee-band) moved=mix(shin,thigh,smoothstep(knee-band,knee+band,wp.y));
+else if(wp.y>ankle+band) moved=shin;
+else moved=mix(original,shin,smoothstep(ankle-band,ankle+band,wp.y));
+wp.y=moved.x;
+if(uForwardAxis<0.5)wp.x=moved.y;else wp.z=moved.y;
 transformed=(uInvModel*vec4(wp,1.0)).xyz;
 `);
  };
- mesh.material.customProgramCacheKey=()=> 'atlas-squat-gpu-1';
+ mesh.material.customProgramCacheKey=()=> 'atlas-squat-sagittal-v34';
 }
 function setDepth(raw){
  const d=THREE.MathUtils.clamp(raw,0,1);
  $('depth').value=Math.round(d*100);$('depthLabel').textContent=Math.round(d*100)+' %';
  if(!rigParams)return;
- const {hip,knee,ankle}=rigParams,upper=hip-knee,lower=knee-ankle,total=upper+lower;
- // Two-segment sagittal IK: knee moves forward, pelvis moves down and back.
- // Calibrated by segment lengths; still a visual approximation without actual joints.
- const f=forwardSign,hipY=hip-total*.34*d,hipZ=-f*total*.17*d;
- const vy=hipY-ankle,vz=hipZ,dist=Math.hypot(vy,vz);
- const reach=Math.min(upper+lower-0.00001,Math.max(Math.abs(upper-lower)+0.00001,dist));
- const uy=vy/Math.max(dist,.00001),uz=vz/Math.max(dist,.00001);
- const along=(lower*lower-upper*upper+reach*reach)/(2*reach);
- const height=Math.sqrt(Math.max(0,lower*lower-along*along));
- const k1={y:ankle+uy*along-uz*height,z:uz*along+uy*height};
- const k2={y:ankle+uy*along+uz*height,z:uz*along-uy*height};
- const k=(k1.z*f>k2.z*f)?k1:k2;
- // Rotation is measured from neutral thigh (hip->knee: down), shin (ankle->knee: up).
- const thighA=Math.atan2(k.z-hipZ,hipY-k.y);
- const shinA=Math.atan2(-k.z,k.y-ankle);
- // Correct rotation matrix: y'=cos*y-sin*z, z'=sin*y+cos*z.
- // Thigh initially points downward, so negative thighA yields forward knee motion.
- const actualThighA=-thighA;
- const actualShinA=-shinA;
- // Torso must lean TOWARD toes to balance pelvis moving backward.
- const torsoA=-f*.48*d;
+ const {hip,knee,ankle}=rigParams,L1=hip-knee,L2=knee-ankle,total=L1+L2;
+ const f=forwardSign;
+ // Heel/ankle fixed. Hip moves down and back; knee is solved from fixed limb lengths.
+ const hy=hip-total*.36*d,hf=-f*total*.15*d;
+ const vy=hy-ankle,vf=hf,rawDist=Math.hypot(vy,vf);
+ const D=Math.min(L1+L2-.00001,Math.max(Math.abs(L1-L2)+.00001,rawDist));
+ const uy=vy/Math.max(rawDist,.00001),uf=vf/Math.max(rawDist,.00001);
+ const along=(L2*L2-L1*L1+D*D)/(2*D);
+ const h=Math.sqrt(Math.max(0,L2*L2-along*along));
+ const k1={y:ankle+uy*along-uf*h,f:uf*along+uy*h};
+ const k2={y:ankle+uy*along+uf*h,f:uf*along-uy*h};
+ const k=(k1.f*f>k2.f*f)?k1:k2;
+ // Neutral thigh points down, neutral shin points up.
+ const thighA=Math.atan2(-(k.f-hf),hy-k.y);
+ const shinA=Math.atan2(k.f,k.y-ankle);
+ // Torso leans forward relative to vertical; positive turn moves +Y toward +forward.
+ const torsoA=f*.53*d;
  for(const u of uniforms){
-  u.uHipShift.value.set(hipY-hip,hipZ);
-  u.uKneeShift.value.set(k.y-knee,k.z);
+  u.uHipShift.value.set(hy-hip,hf);
+  u.uKneeShift.value.set(k.y-knee,k.f);
   u.uTorsoAngle.value=torsoA;
-  u.uThighAngle.value=actualThighA;
-  u.uShinAngle.value=actualShinA;
+  u.uThighAngle.value=thighA;
+  u.uShinAngle.value=shinA;
+  u.uForwardAxis.value=forwardAxis;
  }
- const v1=new THREE.Vector2(hipY-k.y,hipZ-k.z),v2=new THREE.Vector2(ankle-k.y,-k.z);
- const included=Math.acos(THREE.MathUtils.clamp(v1.dot(v2)/(upper*lower),-1,1));
- const flexion=180-included*180/Math.PI;
- $('angles').textContent='Kniebeugung (geometrische Näherung): '+Math.round(flexion)+'° · Beugetiefe '+Math.round(d*100)+' %';
+ const v1=new THREE.Vector2(hy-k.y,hf-k.f),v2=new THREE.Vector2(ankle-k.y,-k.f);
+ const flex=180-Math.acos(THREE.MathUtils.clamp(v1.dot(v2)/(L1*L2),-1,1))*180/Math.PI;
+ $('angles').textContent='Kniebeugung (geometrische Näherung): '+Math.round(flex)+'° · Beugetiefe '+Math.round(d*100)+' % · Achse '+(forwardAxis===0?'X':'Z');
 }
 
 function apply(){for(const m of meshes){const c=mode==='squat'?palette[classify(m.userData.atlasName)]:0xb78b7f;m.material.color.setHex(c);m.material.transparent=!!selected&&m!==selected;m.material.opacity=(selected&&m!==selected)?0.13:1;m.material.depthWrite=!selected||m===selected;m.renderOrder=selected&&m===selected?2:0;if(m===selected){m.material.color.setHex(0xffcb05);m.material.opacity=1}}}
@@ -98,9 +83,9 @@ function updateList(){const q=$('search').value.trim().toLowerCase(),reg=$('regi
 function choose(m){selected=m;apply();$('selected').textContent=m?m.userData.atlasName+' · '+(mode==='squat'?({primary:'Hauptbeteiligung',support:'Unterstützung/Stabilisierung',other:'keine hervorgehobene Hauptbeteiligung'}[classify(m.userData.atlasName)]):'Anatomisches Einzelmesh'):'Tippe auf einen Muskel im Modell oder in der Liste.'}
 function resize(){const w=$('view').clientWidth,h=$('view').clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
 function cam(){const r=dist*radius;camera.position.set(center.x+r*Math.sin(az)*Math.cos(el),center.y+r*Math.sin(el),center.z+r*Math.cos(az)*Math.cos(el));camera.lookAt(center)}
-function setup(g){root=g.scene;scene.add(root);root.updateMatrixWorld(true);const box=new THREE.Box3().setFromObject(root);if(box.isEmpty())throw Error('Leeres Muskelmodell');box.getCenter(center);radius=Math.max(.001,box.getSize(new THREE.Vector3()).length()*.38);const size=box.getSize(new THREE.Vector3());rigParams={hip:box.min.y+size.y*.53,knee:box.min.y+size.y*.265,ankle:box.min.y+size.y*.045};root.traverse(o=>{if(!o.isMesh)return;const mat=new THREE.MeshStandardMaterial({color:0xb78b7f,roughness:.78,side:THREE.DoubleSide});o.material=mat;o.userData.atlasName=o.name||'Unbenannter Muskel';meshes.push(o);makeDeformer(o)});if(!meshes.length)throw Error('Keine einzelnen Meshes gefunden');dist=3.3;cam();updateList();apply();setDepth(0);$('status').textContent='Ganzkörper-Muskelatlas: '+meshes.length+' Einzelmeshes. Experimentelle Kniebeuge verfügbar (noch nicht anatomisch validiert).'}
+function setup(g){root=g.scene;scene.add(root);root.updateMatrixWorld(true);const box=new THREE.Box3().setFromObject(root);if(box.isEmpty())throw Error('Leeres Muskelmodell');box.getCenter(center);radius=Math.max(.001,box.getSize(new THREE.Vector3()).length()*.38);const size=box.getSize(new THREE.Vector3());rigParams={hip:box.min.y+size.y*.53,knee:box.min.y+size.y*.265,ankle:box.min.y+size.y*.045};root.traverse(o=>{if(!o.isMesh)return;const mat=new THREE.MeshStandardMaterial({color:0xb78b7f,roughness:.78,side:THREE.DoubleSide});o.material=mat;o.userData.atlasName=o.name||'Unbenannter Muskel';meshes.push(o);makeDeformer(o)});if(!meshes.length)throw Error('Keine einzelnen Meshes gefunden');dist=3.3;cam();updateList();apply();setDepth(0);$('status').textContent='Ganzkörper-Muskelatlas: '+meshes.length+' Einzelmeshes. Experimentelle Kniebeuge v3.4 mit X/Z-Achsenwahl (noch nicht anatomisch validiert).'}
 const url='https://cdn.jsdelivr.net/gh/organui/muscles-3d@main/public/models/muscles.glb';new THREE.GLTFLoader().load(url,g=>{try{setup(g)}catch(e){$('status').textContent='Modellfehler: '+e.message}},undefined,e=>$('status').textContent='Muskelmodell konnte nicht geladen werden. Externes CDN/Datei prüfen: '+(e.message||'Netzwerkfehler'));
 $('normal').onclick=()=>{mode='normal';$('normal').classList.add('active');$('squat').classList.remove('active');choose(selected)};$('squat').onclick=()=>{mode='squat';$('squat').classList.add('active');$('normal').classList.remove('active');choose(selected)};$('clear').onclick=()=>choose(null);$('search').oninput=updateList;$('region').onchange=updateList;$('reset').onclick=()=>{az=.2;el=.05;dist=3.3;cam();choose(null)};
-$('depth').oninput=()=>{playing=false;$('play').textContent='▶ Kniebeuge';setDepth(+$('depth').value/100)};$('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'⏸ Pause':'▶ Kniebeuge'};$('stand').onclick=()=>{playing=false;$('play').textContent='▶ Kniebeuge';setDepth(0)};$('frontdir').onclick=()=>{forwardSign*=-1;setDepth(+$('depth').value/100)};
+$('depth').oninput=()=>{playing=false;$('play').textContent='▶ Kniebeuge';setDepth(+$('depth').value/100)};$('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'⏸ Pause':'▶ Kniebeuge'};$('stand').onclick=()=>{playing=false;$('play').textContent='▶ Kniebeuge';setDepth(0)};$('frontdir').onclick=()=>{forwardSign*=-1;setDepth(+$('depth').value/100)};$('axis').onclick=()=>{forwardAxis=1-forwardAxis;$('axis').textContent='Bewegungsachse: '+(forwardAxis===0?'X':'Z');setDepth(+$('depth').value/100)};
 const canvas=$('view');canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,moved:false};canvas.setPointerCapture(e.pointerId)});canvas.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>2)drag.moved=true;az+=dx*.008;el=Math.max(-1.2,Math.min(1.2,el+dy*.006));drag.x=e.clientX;drag.y=e.clientY;cam()});canvas.addEventListener('pointerup',e=>{if(!drag)return;const moved=drag.moved;drag=null;if(moved||!root)return;const rect=canvas.getBoundingClientRect(),mouse=new THREE.Vector2((e.clientX-rect.left)/rect.width*2-1,-((e.clientY-rect.top)/rect.height)*2+1),ray=new THREE.Raycaster();ray.setFromCamera(mouse,camera);const hits=ray.intersectObjects(meshes,false);if(hits.length)choose(hits[0].object)});canvas.addEventListener('wheel',e=>{e.preventDefault();dist=Math.max(.8,Math.min(12,dist*Math.exp(e.deltaY*.001)));cam()},{passive:false});window.addEventListener('resize',resize);resize();cam();function loop(t){requestAnimationFrame(loop);if(playing&&rigParams){if(t-lastFrame>40){animT+=Math.min(.08,(t-lastFrame)/1000);setDepth((1-Math.cos(animT*1.6))/2);lastFrame=t}}else lastFrame=t;renderer.render(scene,camera)}requestAnimationFrame(loop)})();
 </script></body></html>
