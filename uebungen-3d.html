@@ -44,7 +44,9 @@ function poseArms(depth){
   for(const arm of arms){
    const shoulder=wp(arm.upper),elbow=wp(arm.lower),wrist=wp(arm.hand);
    const side=Math.sign(shoulder.clone().sub(center).dot(axis))||1;
-   const target=equipmentGrip(side).center.clone();
+   const grip=equipmentGrip(side);
+   // Aim the wrist beside the shaft, not through its center: the palm occupies the gap.
+   const target=grip.center.clone().add(new THREE.Vector3(0,grip.radius+.038,0));
    const upperLength=shoulder.distanceTo(elbow),lowerLength=elbow.distanceTo(wrist);
    const toTarget=target.clone().sub(shoulder),rawDistance=toTarget.length();
    if(rawDistance<.0001)continue;
@@ -71,7 +73,7 @@ function poseArms(depth){
     const shoulderToElbow=actualElbow.clone().sub(shoulder),elbowToWrist=actualWrist.clone().sub(actualElbow);
     const elbowFlex=deg(shoulderToElbow.angleTo(elbowToWrist));
     const invalid=elbowSide<.02||wristSide<.02||elbowFlex>155||elbowFlex<12;
-    const score=wristError*10+Math.max(0,.07-elbowSide)*12+Math.max(0,.07-wristSide)*12+
+    const score=wristError*20+Math.max(0,.07-elbowSide)*12+Math.max(0,.07-wristSide)*12+
       Math.max(0,elbowFlex-125)*.02+Math.max(0,30-elbowFlex)*.02+
       Math.max(0,actualElbow.y-shoulder.y)*3;
     const adaptiveScore=score-learned[candidateIndex]*.15;
@@ -124,7 +126,7 @@ function createBarbell(){
  model.updateMatrixWorld(true);
  const left=wp(arms[0].upper),right=wp(arms[1].upper),span=left.distanceTo(right);
  const axis=right.clone().sub(left).normalize(),mid=left.clone().add(right).multiplyScalar(.5);
- const back=bind.forward.clone().multiplyScalar(-Math.max(.035,span*.25));
+ const back=bind.forward.clone().multiplyScalar(-Math.max(.045,span*.34));
  const center=mid.add(back);
  const root=new THREE.Group();spine.add(root);root.position.copy(spine.worldToLocal(center.clone()));
  const localAxis=axis.clone().transformDirection(new THREE.Matrix4().extractRotation(spine.matrixWorld).invert()).normalize();
@@ -223,7 +225,7 @@ function poseGripFingers(){
   const baseClearance=radial.length()-shaftRadius;
   // Finger-base contact is mandatory. A nearby wrist alone does not constitute a grasp.
   // 2 cm tolerance is intentionally conservative until palm surface mesh is calibrated.
-  if(baseClearance>.02||handRadial>.055){blocked++;continue;}
+  if(baseClearance>.025||handRadial>.075){blocked++;continue;}
   const joints=chain.joints;
   const length=wp(joints[2]).distanceTo(wp(joints[1]))||.02;
   function tip(){
@@ -348,7 +350,7 @@ function pose(d){
  poseGripFingers();
  $('pct').textContent=Math.round(d*100)+' %';updateMuscleBars(best);
  if(barbell?.visible)barContact();else if($('contactStatus'))$('contactStatus').textContent='Langhantel ausgeschaltet';
- const gripError=barbell?.visible?arms.map(arm=>{const center=wp(barbell),axis=barbell.userData.axisLocal.clone().transformDirection(barbell.matrixWorld).normalize(),side=Math.sign(wp(arm.upper).sub(center).dot(axis))||1,target=equipmentGrip(side).center.clone();return wp(arm.hand).distanceTo(target)}):[];
+ const gripError=barbell?.visible?arms.map(arm=>{const center=wp(barbell),axis=barbell.userData.axisLocal.clone().transformDirection(barbell.matrixWorld).normalize(),side=Math.sign(wp(arm.upper).sub(center).dot(axis))||1,target=equipmentGrip(side).center.clone().add(new THREE.Vector3(0,equipmentGrip(side).radius+.038,0));return wp(arm.hand).distanceTo(target)}):[];
  $('metrics').textContent='Kniebeugung links/rechts: '+best.knees.map(x=>x.toFixed(0)+'°').join(' / ')+
  ' · Sprunggelenk (Schätzwert) L/R: '+best.ankles.map(x=>x.toFixed(0)+'°').join(' / ')+ ' · Rumpfneigung: '+Math.abs(deg(best.leanSigned)).toFixed(0)+'°'+
  ' · Hüfte nach hinten: '+(best.hipBack*100).toFixed(1)+' Modelleinheiten'+
