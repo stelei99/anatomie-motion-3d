@@ -64,17 +64,26 @@ for(const s of ['l','r']){
 // Atlas muscle groups include tendons crossing one or more joints. Blend
 // each vertex between the adjacent segments in the original standing pose.
 function bindLegMuscle(part, limb){
- const original=part.mesh,geometry=original.geometry.clone();
- const position=geometry.attributes.position,indices=[],weights=[],point=V();
  const segments=[limb.foot,limb.shin,limb.thigh,pelvis,trunk];
  const ankle=limb.shin.getWorldPosition(V()).y,knee=limb.thigh.getWorldPosition(V()).y,hip=limb.hip.getWorldPosition(V()).y;
  const leg=hip-ankle;
  const limits=[[ankle,.035],[knee,.085],[hip,.13],[hip+.18*leg,.045]];
+ bindAcrossJoints(part,segments,limits.map(([center,width])=>[center,width*leg]));
+}
+function bindArmMuscle(part,limb){
+ const wrist=limb.hand.getWorldPosition(V()).y,elbow=limb.forearm.getWorldPosition(V()).y;
+ const forearmLength=limb.hand.position.length(),upperLength=limb.forearm.position.length();
+ bindAcrossJoints(part,[limb.hand,limb.forearm,limb.arm],[
+  [wrist,forearmLength*.13],[elbow,upperLength*.22]
+ ]);
+}
+function bindAcrossJoints(part,segments,limits){
+ const original=part.mesh,geometry=original.geometry.clone();
+ const position=geometry.attributes.position,indices=[],weights=[],point=V();
  for(let i=0;i<position.count;i++){
   point.fromBufferAttribute(position,i).applyMatrix4(original.matrixWorld);
   let from=0,blend=0;
-  for(const [center,width] of limits){
-   const radius=leg*width;
+  for(const [center,radius] of limits){
    if(point.y<center+radius){
     blend=THREE.MathUtils.smoothstep(point.y,center-radius,center+radius);
     break;
@@ -106,6 +115,7 @@ for(const p of parts){
   if(/^hand/.test(n))parent=L.hand;
  }
  if(p.layer==='muscles'&&L&&/^(gluteal|iliopsoas|quadriceps|adductors|hamstrings|calf|shin_muscles)_/.test(n))bindLegMuscle(p,L);
+ else if(p.layer==='muscles'&&L&&/^(upper_arm_muscles|forearm_muscles|hand_muscles)_/.test(n))bindArmMuscle(p,L);
  else parent.attach(p.mesh);
  p.mesh.material=new THREE.MeshStandardMaterial({roughness:.8,side:THREE.DoubleSide});
 }
