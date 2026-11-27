@@ -3,7 +3,7 @@
 *{box-sizing:border-box}body{margin:0;background:#052640;color:#eaf7fd;font:16px system-ui}main{max-width:1000px;margin:auto;padding:16px}h1{font-size:1.5rem;margin:0 0 12px}.tools,fieldset{display:flex;flex-wrap:wrap;gap:12px;align-items:center}fieldset{border:1px solid #48738b;border-radius:10px;margin:12px 0}button,select{font:inherit;background:#07345b;color:white;border:1px solid #6997ad;padding:8px;border-radius:6px}canvas{width:100%;height:55vh;min-height:260px;display:block;border-radius:10px;touch-action:none}input{accent-color:#08a9ef}#phase{flex:1;min-width:90px}small,a{color:#c5e6f3}#status{min-height:1.4em}label{white-space:nowrap}
 </style><main><h1>Bewegungsanatomie</h1><div class="tools"><label for="exercise">Übung</label><select id="exercise"></select><button id="side">Seite</button><button id="front">Vorne</button></div>
 <fieldset><legend>Anatomische Ebenen</legend><label><input type="checkbox" id="muscles" checked> Muskeln</label><label><input type="checkbox" id="bones" checked> Knochen</label><label><input type="checkbox" id="joints" checked> Gelenkzentren</label></fieldset>
-<canvas id="view" aria-label="Drehbares anatomisches Modell"></canvas><p id="status" role="status">Anatomiemodell wird geladen …</p><div class="tools"><button id="play" disabled>Abspielen</button><label for="phase">Bewegung</label><input id="phase" disabled type="range" min="0" max="100" value="0"><output id="percent">0 %</output></div><p id="groups"></p><small>Dunkelrot markiert die hervorgehobenen Muskelgruppen. Gelbe Punkte markieren geschätzte Gelenkzentren. Die Bewegungen sind kinematische Annäherungen. <a href="index.html">Zum Anatomieatlas</a></small></main>
+<canvas id="view" aria-label="Drehbares anatomisches Modell"></canvas><strong id="selection" role="status"></strong><p id="status" role="status">Anatomiemodell wird geladen …</p><div class="tools"><button id="play" disabled>Abspielen</button><label for="phase">Bewegung</label><input id="phase" disabled type="range" min="0" max="100" value="0"><output id="percent">0 %</output></div><p id="groups"></p><small>Dunkelrot markiert die hervorgehobenen Muskelgruppen. Gelbe Punkte markieren geschätzte Gelenkzentren. Die Bewegungen sind kinematische Annäherungen. <a href="index.html">Zum Anatomieatlas</a></small></main>
 <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -119,7 +119,69 @@ for(const p of parts){
  else parent.attach(p.mesh);
  p.mesh.material=new THREE.MeshStandardMaterial({roughness:.8,side:THREE.DoubleSide});
 }
+const names={
+ spine_cervical:'Halswirbelsäule',spine_thoracic:'Brustwirbelsäule',spine_lumbar:'Lendenwirbelsäule',
+ sternum:'Brustbein',foot:'Fußknochen',hand:'Handknochen',skull:'Schädel',teeth:'Zähne',mandible:'Unterkiefer',
+ clavicle:'Schlüsselbein',ribs:'Rippen',femur:'Oberschenkelknochen',lower_leg:'Schienbein und Wadenbein',
+ pelvis:'Becken',humerus:'Oberarmknochen',patella:'Kniescheibe',forearm:'Elle und Speiche',scapula:'Schulterblatt',
+ chest_muscles:'Brustmuskulatur',foot_muscles:'Fußmuskulatur',hand_muscles:'Handmuskulatur',
+ deltoid:'Deltamuskel',trapezius:'Trapezmuskel',diaphragm:'Zwerchfell',pelvic_floor:'Beckenbodenmuskulatur',
+ intercostals:'Zwischenrippenmuskulatur',forearm_muscles:'Unterarmmuskulatur',neck_muscles:'Halsmuskulatur',
+ calf:'Wadenmuskulatur',upper_arm_muscles:'Oberarmmuskulatur',back_muscles:'Rückenmuskulatur',
+ adductors:'Adduktoren des Oberschenkels',shin_muscles:'Schienbeinmuskulatur',abdominal_muscles:'Bauchmuskulatur',
+ gluteal:'Gesäßmuskulatur',iliopsoas:'Lendendarmbeinmuskel',rotator_cuff:'Rotatorenmanschette',
+ shoulder_muscles:'Schultermuskulatur',quadriceps:'Vierköpfiger Oberschenkelmuskel (Quadrizeps)',hamstrings:'Hintere Oberschenkelmuskulatur'
+};
+function partName(name){
+ const side=name.match(/_([lr])$/);
+ return (names[name.replace(/_[lr]$/,'')]||name)+(side?(side[1]==='l'?' · links':' · rechts'):'');
+}
+// Render one pixel with the same skinning and depth test as the displayed pose.
+const pickTarget=new THREE.WebGLRenderTarget(1,1),pickCamera=new THREE.PerspectiveCamera();
+const pixel=new Uint8Array(4),canvas=el('view');
+for(const [index,p] of parts.entries()){
+ p.surface=p.mesh.material;
+ p.pickMaterial=new THREE.MeshBasicMaterial({color:index+1,side:THREE.DoubleSide,toneMapped:false});
+}
+function identify(event){
+ const rect=canvas.getBoundingClientRect(),w=canvas.width,h=canvas.height;
+ const x=Math.floor((event.clientX-rect.left)*w/rect.width),y=Math.floor((event.clientY-rect.top)*h/rect.height);
+ if(x<0||x>=w||y<0||y>=h)return;
+ pickCamera.copy(camera);pickCamera.setViewOffset(w,h,x,y,1,1);
+ const results=[],originalTarget=renderer.getRenderTarget(),background=renderer.getClearColor(new THREE.Color());
+ try{
+  renderer.setRenderTarget(pickTarget);renderer.setClearColor(0);
+  for(const marker of markers)marker.visible=false;
+  for(const [layer,toggle,label] of [['muscles','muscles','Muskel'],['skeleton','bones','Skelett']]){
+   if(!el(toggle).checked)continue;
+   for(const p of parts){p.mesh.visible=p.layer===layer;p.mesh.material=p.pickMaterial}
+   renderer.render(scene,pickCamera);
+   renderer.readRenderTargetPixels(pickTarget,0,0,1,1,pixel);
+   const hit=parts[pixel[2]-1];
+   if(hit)results.push(label+' · '+partName(hit.name));
+  }
+ }finally{
+  for(const p of parts){p.mesh.material=p.surface;p.mesh.visible=el(p.layer==='muscles'?'muscles':'bones').checked}
+  for(const m of markers)m.visible=el('joints').checked;
+  renderer.setRenderTarget(originalTarget);renderer.setClearColor(background);
+ }
+ el('selection').textContent=results.join('   |   ')||'Keine Struktur an dieser Stelle getroffen.';
+}
+let tap=null;
+canvas.addEventListener('pointerdown',e=>{
+ tap=e.isPrimary&&e.button===0?{id:e.pointerId,x:e.clientX,y:e.clientY}:null;
+});
+canvas.addEventListener('pointermove',e=>{
+ if(tap&&e.pointerId===tap.id&&Math.hypot(e.clientX-tap.x,e.clientY-tap.y)>6)tap=null;
+});
+canvas.addEventListener('pointercancel',()=>{tap=null});
+canvas.addEventListener('pointerup',e=>{
+ if(tap&&tap.id===e.pointerId&&Math.hypot(e.clientX-tap.x,e.clientY-tap.y)<=6)identify(e);
+ tap=null;
+});
+
 function appearance(){
+ el('selection').textContent='';
  const [,label,active]=exercises[el('exercise').value];el('groups').textContent='Hervorgehoben: '+label;
  for(const {mesh,layer,name} of parts){
   const muscle=layer==='muscles',overlay=muscle&&el('bones').checked;
@@ -155,7 +217,7 @@ orbit.target.copy(target);orbit.enablePan=false;
 function cameraAt(x,z){const distance=height*1.9;camera.position.copy(target).add(new THREE.Vector3(x,.06,z).normalize().multiplyScalar(distance));orbit.update()}
 el('side').onclick=()=>cameraAt(1,0);el('front').onclick=()=>cameraAt(0,1);
 new ResizeObserver(()=>{const c=el('view');renderer.setSize(c.clientWidth,c.clientHeight,false);camera.aspect=c.clientWidth/c.clientHeight;camera.updateProjectionMatrix()}).observe(el('view'));
-cameraAt(.65,1);appearance();pose(0);el('play').disabled=el('phase').disabled=false;el('status').textContent='Modell drehen durch Ziehen · Zoomen mit zwei Fingern oder Mausrad';
+cameraAt(.65,1);appearance();pose(0);el('play').disabled=el('phase').disabled=false;el('status').textContent='Für den Namen eine Struktur antippen oder anklicken · Drehen durch Ziehen · Zoomen mit zwei Fingern oder Mausrad';
 let last=0;renderer.setAnimationLoop(t=>{if(playing){time+=Math.min(.06,(t-last)/1000)*1.6;pose((1-Math.cos(time))/2)}last=t;renderer.render(scene,camera)});
 })().catch(e=>document.getElementById('status').textContent='3D-Ansicht konnte nicht geladen werden: '+e.message);
 </script></html>
