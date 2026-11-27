@@ -61,6 +61,39 @@ for(const s of ['l','r']){
  const arm=joint(trunk,at('humerus',true)),forearm=joint(arm,mid(at('humerus',false),at('forearm',true))),hand=joint(forearm,mid(at('forearm',false),at('hand',true)));
  limbs[s]={foot,shin,thigh,hip,arm,forearm,hand};
 }
+// Atlas muscle groups include tendons crossing one or more joints. Blend
+// each vertex between the adjacent segments in the original standing pose.
+function bindLegMuscle(part, limb){
+ const original=part.mesh,geometry=original.geometry.clone();
+ const position=geometry.attributes.position,indices=[],weights=[],point=V();
+ const segments=[limb.foot,limb.shin,limb.thigh,pelvis,trunk];
+ const ankle=limb.shin.getWorldPosition(V()).y,knee=limb.thigh.getWorldPosition(V()).y,hip=limb.hip.getWorldPosition(V()).y;
+ const leg=hip-ankle;
+ const limits=[[ankle,.035],[knee,.085],[hip,.13],[hip+.18*leg,.045]];
+ for(let i=0;i<position.count;i++){
+  point.fromBufferAttribute(position,i).applyMatrix4(original.matrixWorld);
+  let from=0,blend=0;
+  for(const [center,width] of limits){
+   const radius=leg*width;
+   if(point.y<center+radius){
+    blend=THREE.MathUtils.smoothstep(point.y,center-radius,center+radius);
+    break;
+   }
+   from++;
+  }
+  indices.push(from,Math.min(from+1,segments.length-1),0,0);
+  weights.push(1-blend,blend,0,0);
+ }
+ geometry.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(indices,4));
+ geometry.setAttribute('skinWeight',new THREE.Float32BufferAttribute(weights,4));
+ const skinned=new THREE.SkinnedMesh(geometry,original.material);
+ skinned.name=part.name;
+ original.matrixWorld.decompose(skinned.position,skinned.quaternion,skinned.scale);
+ scene.add(skinned);skinned.updateMatrixWorld(true);
+ skinned.bind(new THREE.Skeleton(segments),skinned.matrixWorld.clone());
+ skinned.frustumCulled=false;
+ part.mesh=skinned;
+}
 for(const p of parts){
  const n=p.name,L=limbs[n.slice(-1)];let parent=trunk;
  if(/^pelvis|^pelvic_floor|^gluteal|^iliopsoas/.test(n))parent=pelvis;
@@ -72,7 +105,9 @@ for(const p of parts){
   if(/^forearm/.test(n))parent=L.forearm;
   if(/^hand/.test(n))parent=L.hand;
  }
- parent.attach(p.mesh);p.mesh.material=new THREE.MeshStandardMaterial({roughness:.8,side:THREE.DoubleSide});
+ if(p.layer==='muscles'&&L&&/^(gluteal|iliopsoas|quadriceps|adductors|hamstrings|calf|shin_muscles)_/.test(n))bindLegMuscle(p,L);
+ else parent.attach(p.mesh);
+ p.mesh.material=new THREE.MeshStandardMaterial({roughness:.8,side:THREE.DoubleSide});
 }
 function appearance(){
  const [,label,active]=exercises[el('exercise').value];el('groups').textContent='Hervorgehoben: '+label;
