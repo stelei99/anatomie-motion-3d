@@ -1,0 +1,116 @@
+<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bewegungsanatomie · Anatomie Motion 3D</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#052640;color:#eaf7fd;font:16px system-ui}main{max-width:1000px;margin:auto;padding:16px}h1{font-size:1.5rem;margin:0 0 12px}.tools,fieldset{display:flex;flex-wrap:wrap;gap:12px;align-items:center}fieldset{border:1px solid #48738b;border-radius:10px;margin:12px 0}button,select{font:inherit;background:#07345b;color:white;border:1px solid #6997ad;padding:8px;border-radius:6px}canvas{width:100%;height:55vh;min-height:260px;display:block;border-radius:10px;touch-action:none}input{accent-color:#08a9ef}#phase{flex:1;min-width:90px}small,a{color:#c5e6f3}#status{min-height:1.4em}label{white-space:nowrap}
+</style><main><h1>Bewegungsanatomie</h1><div class="tools"><label for="exercise">Übung</label><select id="exercise"></select><button id="side">Seite</button><button id="front">Vorne</button></div>
+<fieldset><legend>Anatomische Ebenen</legend><label><input type="checkbox" id="muscles" checked> Muskeln</label><label><input type="checkbox" id="bones" checked> Knochen</label><label><input type="checkbox" id="joints" checked> Gelenkzentren</label></fieldset>
+<canvas id="view" aria-label="Drehbares anatomisches Modell"></canvas><p id="status" role="status">Anatomiemodell wird geladen …</p><div class="tools"><button id="play" disabled>Abspielen</button><label for="phase">Bewegung</label><input id="phase" disabled type="range" min="0" max="100" value="0"><output id="percent">0 %</output></div><p id="groups"></p><small>Dunkelrot markiert die hervorgehobenen Muskelgruppen. Gelbe Punkte markieren geschätzte Gelenkzentren. Die Bewegungen sind kinematische Annäherungen. <a href="index.html">Zum Anatomieatlas</a></small></main>
+<script src="https://cdn.jsdelivr.net/npm/three@0.146.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.146.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.146.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/meshoptimizer@0.20.0/meshopt_decoder.js"></script>
+<script>
+(async()=>{
+const el=id=>document.getElementById(id), V=()=>new THREE.Vector3(), rad=THREE.MathUtils.degToRad;
+const renderer=new THREE.WebGLRenderer({canvas:el('view'),antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0x102f42);
+const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(35,1,.01,100),orbit=new THREE.OrbitControls(camera,el('view'));
+scene.add(new THREE.HemisphereLight(0xffffff,0x8495a9,1.3));
+const light=new THREE.DirectionalLight(0xffffff,1.1);light.position.set(2,4,3);scene.add(light);
+const exercises={
+ squat:['Kniebeuge','Quadrizeps und Gesäß',/quadriceps|gluteal/,{shin:28,thigh:-65,trunk:32,front:60}],
+ quarter:['Viertelkniebeuge','Quadrizeps und Gesäß',/quadriceps|gluteal/,{shin:14,thigh:-28,trunk:13,front:28}],
+ hinge:['Hüftbeuge / Good Morning','Gesäß, Beinbeuger und Rückenstrecker',/gluteal|hamstrings|back_muscles/,{shin:2,thigh:-16,trunk:60}],
+ calf:['Wadenheben','Waden',/^calf/,{heel:24}],
+ curl:['Armbeugen beidseits','Oberarmbeuger',/upper_arm_muscles/,{curl:108}],
+ alt:['Armbeugen im Wechsel','Oberarmbeuger',/upper_arm_muscles/,{alternate:105}],
+ lateral:['Seitheben','Deltamuskeln',/deltoid/,{side:73,curl:10}],
+ raise:['Frontheben','Vordere Schulter',/deltoid/,{front:78,curl:8}],
+ row:['Vorgebeugtes Rudern','Rücken, hintere Schulter und Oberarmbeuger',/back_muscles|deltoid|upper_arm_muscles/,{row:true}]
+};
+for(const [key,[label]] of Object.entries(exercises))el('exercise').add(new Option(label,key));
+const loader=new THREE.GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+const {scene:source}=await loader.loadAsync('https://cdn.jsdelivr.net/npm/open-anatomy-3d@0.1.0/models/anatomy-male.glb');
+source.updateMatrixWorld(true);
+const parts=[],lookup={},markers=[];
+for(const layer of ['skeleton','muscles']){
+ source.getObjectByName(layer).traverse(mesh=>{
+  if(!mesh.isMesh)return;
+  const item={mesh,layer,name:mesh.name};parts.push(item);lookup[mesh.name]=mesh;
+ });
+}
+// Average the vertices near each bone end in world space.
+function end(name,top){
+ const mesh=lookup[name],attr=mesh.geometry.attributes.position,box=new THREE.Box3().setFromObject(mesh),sum=V(),v=V();
+ const span=box.max.y-box.min.y,limit=top?box.max.y-span*.12:box.min.y+span*.12;let count=0;
+ for(let i=0;i<attr.count;i++){v.fromBufferAttribute(attr,i).applyMatrix4(mesh.matrixWorld);if(top?v.y>=limit:v.y<=limit){sum.add(v);count++}}
+ return count?sum.divideScalar(count):box.getCenter(sum);
+}
+function joint(parent,point,show=true){
+ const g=new THREE.Group();parent.add(g);g.position.copy(parent.worldToLocal(point.clone()));g.updateMatrixWorld(true);
+ if(show){const marker=new THREE.Mesh(new THREE.SphereGeometry(.015,12,9),new THREE.MeshBasicMaterial({color:0xffcb05,depthTest:false}));marker.renderOrder=3;g.add(marker);markers.push(marker)}
+ return g;
+}
+const mid=(a,b)=>a.clone().lerp(b,.5),hipMid=mid(end('femur_l',true),end('femur_r',true));
+const pelvis=joint(scene,hipMid,false),trunk=joint(pelvis,hipMid,false),limbs={};
+for(const s of ['l','r']){
+ const at=(n,t)=>end(n+'_'+s,t);
+ const footBox=new THREE.Box3().setFromObject(lookup['foot_'+s]);
+ const toe=footBox.getCenter(V());toe.z=footBox.max.z;toe.y=footBox.min.y;
+ const foot=joint(scene,toe,false),shin=joint(foot,at('lower_leg',false));
+ const thigh=joint(shin,mid(at('lower_leg',true),at('femur',false))),hip=joint(thigh,at('femur',true));
+ const arm=joint(trunk,at('humerus',true)),forearm=joint(arm,mid(at('humerus',false),at('forearm',true))),hand=joint(forearm,mid(at('forearm',false),at('hand',true)));
+ limbs[s]={foot,shin,thigh,hip,arm,forearm,hand};
+}
+for(const p of parts){
+ const n=p.name,L=limbs[n.slice(-1)];let parent=trunk;
+ if(/^pelvis|^pelvic_floor|^gluteal|^iliopsoas/.test(n))parent=pelvis;
+ else if(L){
+  if(/^(foot)/.test(n))parent=L.foot;
+  if(/^(calf|lower_leg|shin_muscles|patella)/.test(n))parent=L.shin;
+  if(/^(femur|hamstrings|adductors|quadriceps)/.test(n))parent=L.thigh;
+  if(/^(humerus|upper_arm|deltoid)/.test(n))parent=L.arm;
+  if(/^forearm/.test(n))parent=L.forearm;
+  if(/^hand/.test(n))parent=L.hand;
+ }
+ parent.attach(p.mesh);p.mesh.material=new THREE.MeshStandardMaterial({roughness:.8,side:THREE.DoubleSide});
+}
+function appearance(){
+ const [,label,active]=exercises[el('exercise').value];el('groups').textContent='Hervorgehoben: '+label;
+ for(const {mesh,layer,name} of parts){
+  const muscle=layer==='muscles',overlay=muscle&&el('bones').checked;
+  mesh.visible=el(muscle?'muscles':'bones').checked;
+  const mat=mesh.material;mat.color.setHex(muscle?(active.test(name)?0x9e2436:0xd69a96):0xffedcf);
+  mat.transparent=overlay;mat.opacity=overlay?(active.test(name)?.65:.24):1;mat.depthWrite=!overlay;mat.needsUpdate=true;
+ }
+ for(const m of markers)m.visible=el('joints').checked;
+}
+let phase=0,playing=false,time=0;
+function pose(value){
+ phase=value;const cfg=exercises[el('exercise').value][3],angle=k=>rad(cfg[k]||0)*value;
+ const lean=cfg.row?rad(48):angle('trunk'),shin=cfg.row?rad(3):angle('shin'),thigh=cfg.row?rad(-15):angle('thigh');
+ for(const [s,L] of Object.entries(limbs)){
+  L.foot.rotation.x=angle('heel');L.shin.rotation.x=shin-L.foot.rotation.x;L.thigh.rotation.x=thigh-shin;
+  const raise=cfg.row?lean-rad(68)*value:angle('front');
+  L.arm.rotation.order='ZXY';L.arm.rotation.x=-raise;L.arm.rotation.z=(s==='l'?1:-1)*angle('side');
+  const fraction=cfg.alternate?(s==='l'?value:1-value):0;
+  L.forearm.rotation.x=-(angle('curl')+rad(cfg.alternate||0)*fraction+(cfg.row?rad(84)*value:0));
+ }
+ pelvis.position.copy(mid(limbs.l.hip.getWorldPosition(V()),limbs.r.hip.getWorldPosition(V())));
+ trunk.rotation.x=lean;el('phase').value=Math.round(value*100);el('percent').textContent=el('phase').value+' %';
+}
+function pause(){playing=false;el('play').textContent='Abspielen'}
+el('exercise').onchange=()=>{pause();pose(0);appearance()};
+for(const k of ['bones','joints','muscles'])el(k).onchange=appearance;
+el('phase').oninput=()=>{pause();pose(Number(el('phase').value)/100)};
+el('play').onclick=()=>{if(playing)return pause();time=Math.acos(1-2*phase);playing=true;el('play').textContent='Pause'};
+const bounds=new THREE.Box3();
+for(const {mesh} of parts)bounds.expandByObject(mesh);
+const target=bounds.getCenter(V()),height=bounds.getSize(V()).y;
+orbit.target.copy(target);orbit.enablePan=false;
+function cameraAt(x,z){const distance=height*1.9;camera.position.copy(target).add(new THREE.Vector3(x,.06,z).normalize().multiplyScalar(distance));orbit.update()}
+el('side').onclick=()=>cameraAt(1,0);el('front').onclick=()=>cameraAt(0,1);
+new ResizeObserver(()=>{const c=el('view');renderer.setSize(c.clientWidth,c.clientHeight,false);camera.aspect=c.clientWidth/c.clientHeight;camera.updateProjectionMatrix()}).observe(el('view'));
+cameraAt(.65,1);appearance();pose(0);el('play').disabled=el('phase').disabled=false;el('status').textContent='Modell drehen durch Ziehen · Zoomen mit zwei Fingern oder Mausrad';
+let last=0;renderer.setAnimationLoop(t=>{if(playing){time+=Math.min(.06,(t-last)/1000)*1.6;pose((1-Math.cos(time))/2)}last=t;renderer.render(scene,camera)});
+})().catch(e=>document.getElementById('status').textContent='3D-Ansicht konnte nicht geladen werden: '+e.message);
+</script></html>
